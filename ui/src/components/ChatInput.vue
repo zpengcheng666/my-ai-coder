@@ -1,31 +1,30 @@
 <template>
   <div class="chat-input">
     <div class="input-container">
-      <textarea
+      <el-input
         ref="inputRef"
         v-model="inputMessage"
         :placeholder="placeholder"
         :disabled="disabled"
-        class="input-textarea"
-        rows="1"
+        type="textarea"
+        :autosize="{ minRows: 1, maxRows: 6 }"
         @keydown="handleKeyDown"
-        @input="adjustHeight"
       />
-      <button
+      <el-button
         :disabled="disabled || !inputMessage.trim()"
         @click="sendMessage"
-        class="send-button"
+        type="primary"
+        circle
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 21l21-9L2 3v7l15 2-15 2v7z" fill="currentColor"/>
-        </svg>
-      </button>
+        <el-icon><Promotion /></el-icon>
+      </el-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, nextTick, onMounted } from 'vue'
+import { Promotion } from '@element-plus/icons-vue'
 
 // 定义Props
 interface Props {
@@ -52,7 +51,6 @@ function sendMessage(): void {
   if (inputMessage.value.trim() && !props.disabled) {
     emit('send-message', inputMessage.value.trim())
     inputMessage.value = ''
-    adjustHeight()
   }
 }
 
@@ -63,23 +61,16 @@ function handleKeyDown(event: KeyboardEvent): void {
   }
 }
 
-function adjustHeight(): void {
-  nextTick(() => {
-    const textarea = inputRef.value
-    if (textarea) {
-      textarea.style.height = 'auto'
-      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px'
-    }
-  })
-}
-
 function focus(): void {
   inputRef.value?.focus()
 }
 
 // 生命周期钩子
 onMounted(() => {
-  adjustHeight()
+  // 组件挂载后聚焦输入框
+  nextTick(() => {
+    focus()
+  })
 })
 
 // 定义暴露给父组件的方法
@@ -103,53 +94,17 @@ defineExpose({
   margin: 0 auto;
 }
 
-.input-textarea {
-  flex: 1;
-  padding: 12px 16px;
-  border: 1px solid #ddd;
+:deep(.el-textarea__inner) {
   border-radius: 24px;
+  padding: 12px 16px;
   font-size: 14px;
   line-height: 1.4;
-  resize: none;
-  outline: none;
-  transition: border-color 0.2s;
-  min-height: 44px;
-  max-height: 120px;
-  overflow-y: auto;
 }
 
-.input-textarea:focus {
-  border-color: #007bff;
-}
-
-.input-textarea:disabled {
-  background-color: #f5f5f5;
-  color: #999;
-  cursor: not-allowed;
-}
-
-.send-button {
+:deep(.el-button) {
   width: 44px;
   height: 44px;
-  background-color: #007bff;
-  border: none;
-  border-radius: 50%;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: background-color 0.2s;
-  flex-shrink: 0;
-}
-
-.send-button:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.send-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
@@ -161,7 +116,7 @@ defineExpose({
     gap: 8px;
   }
   
-  .input-textarea {
+  :deep(.el-textarea__inner) {
     font-size: 16px; /* 防止在移动设备上自动缩放 */
   }
 }

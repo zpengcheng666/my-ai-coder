@@ -2,143 +2,152 @@
   <div class="settings-panel">
     <div class="settings-header">
       <h3>系统设置</h3>
-      <button @click="$emit('close')" class="close-btn">
-        <span class="icon">✕</span>
-      </button>
+      <el-button @click="$emit('close')" type="danger" :icon="Close" circle />
     </div>
 
     <div class="settings-content">
       <!-- 用户设置 -->
-      <div class="settings-section">
-        <h4>用户设置</h4>
+      <el-card class="settings-section">
+        <template #header>
+          <div class="card-header">
+            <span>用户设置</span>
+          </div>
+        </template>
         <div class="setting-item">
-          <label class="setting-label">用户ID</label>
-          <input
-            v-model="localSettings.userId"
-            class="setting-input"
-            placeholder="输入用户ID"
-            @input="saveSettings"
-          />
-          <p class="setting-description">用于标识您的身份，会话记录将与此ID关联</p>
+          <el-form-item label="用户ID">
+            <el-input
+              v-model="localSettings.userId"
+              placeholder="输入用户ID"
+              @input="saveSettings"
+            />
+            <div class="setting-description">用于标识您的身份，会话记录将与此ID关联</div>
+          </el-form-item>
         </div>
         <div class="setting-item">
-          <label class="setting-label">用户名称</label>
-          <input
-            v-model="localSettings.userName"
-            class="setting-input"
-            placeholder="输入用户名称"
-            @input="saveSettings"
-          />
-          <p class="setting-description">显示在界面上的用户名称</p>
+          <el-form-item label="用户名称">
+            <el-input
+              v-model="localSettings.userName"
+              placeholder="输入用户名称"
+              @input="saveSettings"
+            />
+            <div class="setting-description">显示在界面上的用户名称</div>
+          </el-form-item>
         </div>
-      </div>
+      </el-card>
 
       <!-- 聊天设置 -->
-      <div class="settings-section">
-        <h4>聊天设置</h4>
+      <el-card class="settings-section">
+        <template #header>
+          <div class="card-header">
+            <span>聊天设置</span>
+          </div>
+        </template>
         <div class="setting-item">
-          <label class="setting-label">
-            <input
-              type="checkbox"
+          <el-form-item label="启用流式输出">
+            <el-switch
               v-model="localSettings.streamMode"
               @change="saveSettings"
             />
-            <span class="checkbox-label">启用流式输出</span>
-          </label>
-          <p class="setting-description">AI回复时实时显示内容（推荐）</p>
+            <div class="setting-description">AI回复时实时显示内容（推荐）</div>
+          </el-form-item>
         </div>
         <div class="setting-item">
-          <label class="setting-label">
-            <input
-              type="checkbox"
+          <el-form-item label="自动滚动到底部">
+            <el-switch
               v-model="localSettings.autoScroll"
               @change="saveSettings"
             />
-            <span class="checkbox-label">自动滚动到底部</span>
-          </label>
-          <p class="setting-description">新消息到达时自动滚动到聊天底部</p>
+            <div class="setting-description">新消息到达时自动滚动到聊天底部</div>
+          </el-form-item>
         </div>
         <div class="setting-item">
-          <label class="setting-label">
-            <input
-              type="checkbox"
+          <el-form-item label="显示消息时间">
+            <el-switch
               v-model="localSettings.showTimestamp"
               @change="saveSettings"
             />
-            <span class="checkbox-label">显示消息时间</span>
-          </label>
-          <p class="setting-description">在消息中显示发送时间</p>
+            <div class="setting-description">在消息中显示发送时间</div>
+          </el-form-item>
         </div>
-      </div>
+      </el-card>
 
       <!-- 连接设置 -->
-      <div class="settings-section">
-        <h4>连接设置</h4>
+      <el-card class="settings-section">
+        <template #header>
+          <div class="card-header">
+            <span>连接设置</span>
+          </div>
+        </template>
         <div class="setting-item">
-          <label class="setting-label">后端服务地址</label>
-          <input
-            v-model="localSettings.apiBaseUrl"
-            class="setting-input"
-            placeholder="http://localhost:8081/api"
-            @input="saveSettings"
-          />
-          <p class="setting-description">AI助手后端服务的地址</p>
+          <el-form-item label="后端服务地址">
+            <el-input
+              v-model="localSettings.apiBaseUrl"
+              placeholder="http://localhost:8081/api"
+              @input="saveSettings"
+            />
+            <div class="setting-description">AI助手后端服务的地址</div>
+          </el-form-item>
         </div>
         <div class="setting-item">
-          <label class="setting-label">连接超时时间 (秒)</label>
-          <input
-            type="number"
-            v-model.number="localSettings.timeout"
-            class="setting-input"
-            min="5"
-            max="60"
-            @input="saveSettings"
-          />
-          <p class="setting-description">网络请求的超时时间</p>
+          <el-form-item label="连接超时时间 (秒)">
+            <el-input-number
+              v-model="localSettings.timeout"
+              :min="5"
+              :max="60"
+              @change="saveSettings"
+            />
+            <div class="setting-description">网络请求的超时时间</div>
+          </el-form-item>
         </div>
-      </div>
+      </el-card>
 
       <!-- 系统信息 -->
-      <div class="settings-section">
-        <h4>系统信息</h4>
-        <div class="system-info">
-          <div class="info-item">
-            <span class="info-label">连接状态:</span>
-            <span :class="['info-value', connectionStatus.class]">
-              {{ connectionStatus.text }}
-            </span>
+      <el-card class="settings-section">
+        <template #header>
+          <div class="card-header">
+            <span>系统信息</span>
           </div>
-          <div class="info-item">
-            <span class="info-label">版本:</span>
-            <span class="info-value">v1.0.0</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">最后检查:</span>
-            <span class="info-value">{{ lastHealthCheck || '未检查' }}</span>
-          </div>
+        </template>
+        <el-descriptions :column="1" size="small" border>
+          <el-descriptions-item label="连接状态">
+            <el-tag :type="connectionStatus.type">{{ connectionStatus.text }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="版本">v1.0.0</el-descriptions-item>
+          <el-descriptions-item label="最后检查">{{ lastHealthCheck || '未检查' }}</el-descriptions-item>
+        </el-descriptions>
+        <div style="margin-top: 16px;">
+          <el-button 
+            @click="checkHealth" 
+            :loading="checking" 
+            type="primary" 
+            style="width: 100%"
+          >
+            <el-icon><Search /></el-icon>
+            {{ checking ? '检查中...' : '检查连接' }}
+          </el-button>
         </div>
-        <button @click="checkHealth" class="health-check-btn" :disabled="checking">
-          <span class="icon">🔍</span>
-          {{ checking ? '检查中...' : '检查连接' }}
-        </button>
-      </div>
+      </el-card>
 
       <!-- 数据管理 -->
-      <div class="settings-section">
-        <h4>数据管理</h4>
+      <el-card class="settings-section">
+        <template #header>
+          <div class="card-header">
+            <span>数据管理</span>
+          </div>
+        </template>
         <div class="data-actions">
-          <button @click="exportData" class="data-btn export-btn">
-            <span class="icon">📤</span>
+          <el-button @click="exportData" type="success">
+            <el-icon><Upload /></el-icon>
             导出设置
-          </button>
-          <button @click="importData" class="data-btn import-btn">
-            <span class="icon">📥</span>
+          </el-button>
+          <el-button @click="importData" type="primary">
+            <el-icon><Download /></el-icon>
             导入设置
-          </button>
-          <button @click="resetSettings" class="data-btn reset-btn">
-            <span class="icon">🔄</span>
+          </el-button>
+          <el-button @click="resetSettings" type="warning">
+            <el-icon><Refresh /></el-icon>
             重置设置
-          </button>
+          </el-button>
         </div>
         <input
           ref="fileInput"
@@ -147,13 +156,15 @@
           style="display: none"
           @change="handleFileImport"
         />
-      </div>
+      </el-card>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue'
+import { Close, Search, Upload, Download, Refresh } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { checkServiceHealth } from '../api'
 import { formatTime } from '../utils'
 
@@ -193,7 +204,7 @@ const emit = defineEmits<{
 // 定义接口
 interface ConnectionStatus {
   text: string
-  class: string
+  type: '' | 'success' | 'warning' | 'danger'
 }
 
 interface FileImportEvent extends Event {
@@ -208,7 +219,7 @@ const localSettings = reactive<Settings>({
 const checking = ref<boolean>(false)
 const connectionStatus = ref<ConnectionStatus>({
   text: '未知',
-  class: 'unknown'
+  type: ''
 })
 const lastHealthCheck = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -228,19 +239,19 @@ async function checkHealth(): Promise<void> {
     if (isHealthy) {
       connectionStatus.value = {
         text: '连接正常',
-        class: 'success'
+        type: 'success'
       }
     } else {
       connectionStatus.value = {
         text: '连接失败',
-        class: 'error'
+        type: 'danger'
       }
     }
     lastHealthCheck.value = formatTime(new Date())
   } catch (error) {
     connectionStatus.value = {
       text: '检查失败',
-      class: 'error'
+      type: 'danger'
     }
     console.error('健康检查失败:', error)
   } finally {
@@ -289,13 +300,13 @@ function handleFileImport(event: Event): void {
         if (data.settings) {
           Object.assign(localSettings, data.settings)
           saveSettings()
-          alert('设置导入成功')
+          ElMessage.success('设置导入成功')
         } else {
-          alert('无效的设置文件')
+          ElMessage.error('无效的设置文件')
         }
       }
     } catch (error) {
-      alert('设置文件格式错误')
+      ElMessage.error('设置文件格式错误')
       console.error('导入设置失败:', error)
     }
   }
@@ -306,7 +317,16 @@ function handleFileImport(event: Event): void {
 }
 
 function resetSettings(): void {
-  if (confirm('确定要重置所有设置吗？这将清除您的个人配置。')) {
+  ElMessageBox.confirm(
+    '确定要重置所有设置吗？这将清除您的个人配置。',
+    '确认重置',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+  .then(() => {
     Object.assign(localSettings, {
       userId: 'default_user',
       userName: '用户',
@@ -317,8 +337,11 @@ function resetSettings(): void {
       timeout: 60
     } as Settings)
     saveSettings()
-    alert('设置已重置')
-  }
+    ElMessage.success('设置已重置')
+  })
+  .catch(() => {
+    // 用户取消操作
+  })
 }
 
 function loadSettings(): void {
@@ -350,7 +373,6 @@ watch(() => props.settings, (newSettings) => {
 .settings-panel {
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   max-width: 600px;
   width: 100%;
   max-height: 80vh;
@@ -375,43 +397,19 @@ watch(() => props.settings, (newSettings) => {
   color: #333;
 }
 
-.close-btn {
-  padding: 4px 8px;
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 4px;
-  color: #666;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.close-btn:hover {
-  background-color: #e9ecef;
+.card-header {
+  font-weight: 600;
   color: #333;
+  font-size: 16px;
 }
 
 .settings-content {
   flex: 1;
   overflow-y: auto;
   padding: 20px 24px;
-}
-
-.settings-section {
-  margin-bottom: 32px;
-}
-
-.settings-section:last-child {
-  margin-bottom: 0;
-}
-
-.settings-section h4 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #007bff;
-  padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .setting-item {
@@ -422,107 +420,11 @@ watch(() => props.settings, (newSettings) => {
   margin-bottom: 0;
 }
 
-.setting-label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #555;
-}
-
-.setting-label input[type="checkbox"] {
-  margin-right: 8px;
-}
-
-.checkbox-label {
-  font-weight: normal;
-}
-
-.setting-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.setting-input:focus {
-  border-color: #007bff;
-}
-
 .setting-description {
   margin: 6px 0 0 0;
   font-size: 12px;
   color: #666;
   line-height: 1.4;
-}
-
-.system-info {
-  background-color: #f8f9fa;
-  padding: 16px;
-  border-radius: 6px;
-  margin-bottom: 16px;
-}
-
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.info-item:last-child {
-  margin-bottom: 0;
-}
-
-.info-label {
-  color: #666;
-  font-weight: 500;
-}
-
-.info-value {
-  color: #333;
-}
-
-.info-value.success {
-  color: #28a745;
-  font-weight: 500;
-}
-
-.info-value.error {
-  color: #dc3545;
-  font-weight: 500;
-}
-
-.info-value.unknown {
-  color: #6c757d;
-}
-
-.health-check-btn {
-  width: 100%;
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: background-color 0.2s;
-}
-
-.health-check-btn:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.health-check-btn:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
 }
 
 .data-actions {
@@ -531,50 +433,9 @@ watch(() => props.settings, (newSettings) => {
   flex-wrap: wrap;
 }
 
-.data-btn {
+.data-actions :deep(.el-button) {
   flex: 1;
   min-width: 120px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: background-color 0.2s;
-}
-
-.export-btn {
-  background-color: #28a745;
-  color: white;
-}
-
-.export-btn:hover {
-  background-color: #218838;
-}
-
-.import-btn {
-  background-color: #17a2b8;
-  color: white;
-}
-
-.import-btn:hover {
-  background-color: #138496;
-}
-
-.reset-btn {
-  background-color: #ffc107;
-  color: #212529;
-}
-
-.reset-btn:hover {
-  background-color: #e0a800;
-}
-
-.icon {
-  font-style: normal;
 }
 
 /* 滚动条样式 */
@@ -609,13 +470,8 @@ watch(() => props.settings, (newSettings) => {
     flex-direction: column;
   }
 
-  .data-btn {
+  .data-actions :deep(.el-button) {
     min-width: auto;
-  }
-
-  .info-item {
-    flex-direction: column;
-    gap: 4px;
   }
 }
 </style>

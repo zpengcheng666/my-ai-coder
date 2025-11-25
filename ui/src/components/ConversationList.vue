@@ -2,68 +2,75 @@
   <div class="conversation-list">
     <div class="conversation-header">
       <h3>会话列表</h3>
-      <button @click="createNewConversation" class="new-conversation-btn">
-        <span class="icon">+</span>
+      <el-button @click="createNewConversation" type="primary" plain>
+        <el-icon><Plus /></el-icon>
         新建会话
-      </button>
+      </el-button>
     </div>
 
     <div class="conversation-search">
-      <input
+      <el-input
         v-model="searchKeyword"
         placeholder="搜索会话..."
-        class="search-input"
-      />
+        clearable
+      >
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+      </el-input>
     </div>
 
     <div class="conversation-items">
-      <div
+      <el-card 
         v-for="conversation in filteredConversations"
         :key="conversation.conversationId"
         :class="['conversation-item', { active: currentConversationId === conversation.conversationId }]"
         @click="selectConversation(conversation)"
+        shadow="hover"
       >
         <div class="conversation-info">
           <h4 class="conversation-title">{{ conversation.title || '未命名会话' }}</h4>
           <p class="conversation-time">{{ conversation.createTime ? formatTime(new Date(conversation.createTime)) : '' }}</p>
         </div>
         <div class="conversation-actions">
-          <button @click.stop="deleteConversation(conversation)" class="delete-btn">
-            <span class="icon">🗑️</span>
-          </button>
+          <el-button @click.stop="deleteConversation(conversation)" type="danger" :icon="Delete" circle size="small" />
         </div>
-      </div>
+      </el-card>
     </div>
 
     <div v-if="loading" class="loading">
-      加载中...
+      <el-skeleton :rows="3" animated />
     </div>
 
     <div v-if="errorMessage" class="error">
-      {{ errorMessage }}
+      <el-alert :title="errorMessage" type="error" show-icon />
     </div>
 
     <!-- 创建会话对话框 -->
-    <div v-if="showCreateDialog" class="dialog-overlay" @click="showCreateDialog = false">
-      <div class="dialog" @click.stop>
-        <h3>创建新会话</h3>
-        <input
-          v-model="newConversationTitle"
-          placeholder="请输入会话标题"
-          class="dialog-input"
-          @keydown.enter="confirmCreateConversation"
-        />
-        <div class="dialog-actions">
-          <button @click="showCreateDialog = false" class="cancel-btn">取消</button>
-          <button @click="confirmCreateConversation" class="confirm-btn">创建</button>
-        </div>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showCreateDialog"
+      title="创建新会话"
+      width="400px"
+    >
+      <el-input
+        v-model="newConversationTitle"
+        placeholder="请输入会话标题"
+        @keydown.enter="confirmCreateConversation"
+      />
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showCreateDialog = false">取消</el-button>
+          <el-button type="primary" @click="confirmCreateConversation">创建</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { Plus, Search, Delete } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 import { 
   getUserConversations, 
   createConversation, 
@@ -157,8 +164,18 @@ async function confirmCreateConversation(): Promise<void> {
 
 async function deleteConversation(conversation: Conversation): Promise<void> {
   if (!conversation || !conversation.conversationId) return
-  if (!confirm(`确定要删除会话"${conversation.title}"吗？`)) return
+  
   try {
+    await ElMessageBox.confirm(
+      `确定要删除会话"${conversation.title}"吗？`,
+      '确认删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
     await deleteConversationApi(conversation.conversationId, props.userId)
     // 成功后刷新列表
     await loadConversations()
@@ -167,8 +184,10 @@ async function deleteConversation(conversation: Conversation): Promise<void> {
       emit('conversation-selected', null)
     }
   } catch (error) {
-    errorMessage.value = '删除会话失败'
-    console.error('删除会话失败:', error as Error)
+    if (error !== 'cancel') {
+      errorMessage.value = '删除会话失败'
+      console.error('删除会话失败:', error as Error)
+    }
   }
 }
 
@@ -197,33 +216,16 @@ watch(() => props.userId, () => {
   padding: 20px;
   border-bottom: 1px solid #e1e5e9;
   background-color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .conversation-header h3 {
-  margin: 0 0 15px 0;
+  margin: 0;
   font-size: 18px;
   font-weight: bold;
   color: #333;
-}
-
-.new-conversation-btn {
-  width: 100%;
-  padding: 10px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.new-conversation-btn:hover {
-  background-color: #0056b3;
 }
 
 .conversation-search {
@@ -232,47 +234,38 @@ watch(() => props.userId, () => {
   border-bottom: 1px solid #e1e5e9;
 }
 
-.search-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
+:deep(.el-input__wrapper) {
   border-radius: 20px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.search-input:focus {
-  border-color: #007bff;
 }
 
 .conversation-items {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .conversation-item {
-  padding: 15px 20px;
   cursor: pointer;
-  transition: background-color 0.2s;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  transition: all 0.2s;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
 }
 
 .conversation-item:hover {
-  background-color: #f5f5f5;
+  border-color: #409eff;
 }
 
 .conversation-item.active {
-  background-color: #e3f2fd;
-  border-left: 3px solid #007bff;
+  border-color: #409eff;
+  background-color: #ecf5ff;
 }
 
 .conversation-info {
   flex: 1;
+  padding: 10px;
 }
 
 .conversation-title {
@@ -293,113 +286,22 @@ watch(() => props.userId, () => {
 
 .conversation-actions {
   display: flex;
-  gap: 5px;
+  align-items: center;
+  padding: 0 10px 10px;
 }
 
-.delete-btn {
-  padding: 5px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  border-radius: 3px;
-  opacity: 0.6;
-  transition: opacity 0.2s, background-color 0.2s;
-}
-
-.delete-btn:hover {
-  opacity: 1;
-  background-color: #ffebee;
-}
-
-.loading, .error {
+.loading {
   padding: 20px;
-  text-align: center;
-  color: #666;
-  font-size: 14px;
 }
 
 .error {
-  color: #d32f2f;
+  padding: 20px;
 }
 
-/* 对话框样式 */
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.dialog {
-  background-color: white;
-  padding: 24px;
-  border-radius: 8px;
-  width: 400px;
-  max-width: 90vw;
-}
-
-.dialog h3 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.dialog-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  margin-bottom: 20px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.dialog-input:focus {
-  border-color: #007bff;
-}
-
-.dialog-actions {
+.dialog-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-}
-
-.cancel-btn, .confirm-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.cancel-btn {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-.cancel-btn:hover {
-  background-color: #e0e0e0;
-}
-
-.confirm-btn {
-  background-color: #007bff;
-  color: white;
-}
-
-.confirm-btn:hover {
-  background-color: #0056b3;
-}
-
-.icon {
-  font-style: normal;
 }
 
 /* 滚动条样式 */

@@ -3,94 +3,107 @@
     <div class="document-header">
       <h3>知识库管理</h3>
       <div class="document-actions">
-        <button @click="showAddDialog = true" class="add-doc-btn">
-          <span class="icon">📁</span>
+        <el-button @click="showAddDialog = true" type="success">
+          <el-icon><FolderAdd /></el-icon>
           添加文档
-        </button>
-        <button @click="reloadDocuments" class="reload-btn" :disabled="loading">
-          <span class="icon">🔄</span>
+        </el-button>
+        <el-button @click="reloadDocuments" :loading="loading" type="primary">
+          <el-icon><Refresh /></el-icon>
           重新加载
-        </button>
+        </el-button>
       </div>
     </div>
 
     <div class="document-info">
-      <p class="info-text">
-        <span class="icon">💡</span>
-        管理AI助手的知识库文档，支持添加新文档和重新加载现有文档。
-      </p>
+      <el-alert
+        title="管理AI助手的知识库文档，支持添加新文档和重新加载现有文档。"
+        type="info"
+        show-icon
+        :closable="false"
+      />
     </div>
 
     <div class="document-stats">
-      <div class="stat-item">
-        <span class="stat-label">文档路径:</span>
-        <span class="stat-value">src/main/resources/docs</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">支持格式:</span>
-        <span class="stat-value">.txt, .md, .doc, .pdf</span>
-      </div>
+      <el-descriptions :column="1" size="small" border>
+        <el-descriptions-item label="文档路径">src/main/resources/docs</el-descriptions-item>
+        <el-descriptions-item label="支持格式">.txt, .md, .doc, .pdf</el-descriptions-item>
+      </el-descriptions>
     </div>
 
     <div class="operation-log">
       <h4>操作日志</h4>
       <div class="log-items">
-        <div
+        <el-card 
           v-for="(log, index) in logs"
           :key="index"
           :class="['log-item', log.type]"
+          shadow="hover"
         >
-          <span class="log-time">{{ formatTime(log.timestamp) }}</span>
-          <span class="log-message">{{ log.message }}</span>
-        </div>
+          <div class="log-content">
+            <span class="log-time">{{ formatTime(log.timestamp) }}</span>
+            <span class="log-message">{{ log.message }}</span>
+          </div>
+        </el-card>
       </div>
     </div>
 
     <div v-if="loading" class="loading">
-      <span class="loading-spinner">⏳</span>
-      处理中...
+      <el-skeleton :rows="3" animated />
     </div>
 
     <!-- 添加文档对话框 -->
-    <div v-if="showAddDialog" class="dialog-overlay" @click="showAddDialog = false">
-      <div class="dialog" @click.stop>
-        <h3>添加文档到知识库</h3>
-        <div class="dialog-content">
-          <p class="dialog-description">
-            请输入要添加到知识库的文档完整路径。文档将被自动解析并添加到AI助手的知识库中。
-          </p>
-          <input
-            v-model="newDocumentPath"
-            placeholder="例如: /path/to/your/document.txt"
-            class="dialog-input"
-            @keydown.enter="confirmAddDocument"
+    <el-dialog
+      v-model="showAddDialog"
+      title="添加文档到知识库"
+      width="500px"
+    >
+      <div class="dialog-content">
+        <p class="dialog-description">
+          请输入要添加到知识库的文档完整路径。文档将被自动解析并添加到AI助手的知识库中。
+        </p>
+        <el-input
+          v-model="newDocumentPath"
+          placeholder="例如: /path/to/your/document.txt"
+          @keydown.enter="confirmAddDocument"
+        />
+        <div class="path-examples">
+          <p class="examples-title">路径示例:</p>
+          <el-alert
+            title="src/main/resources/docs/新文档.md"
+            type="info"
+            :closable="false"
           />
-          <div class="path-examples">
-            <p class="examples-title">路径示例:</p>
-            <ul class="examples-list">
-              <li>src/main/resources/docs/新文档.md</li>
-              <li>D:/documents/项目说明.txt</li>
-              <li>/home/user/知识文档.pdf</li>
-            </ul>
-          </div>
+          <el-alert
+            title="D:/documents/项目说明.txt"
+            type="info"
+            :closable="false"
+          />
+          <el-alert
+            title="/home/user/知识文档.pdf"
+            type="info"
+            :closable="false"
+          />
         </div>
-        <div class="dialog-actions">
-          <button @click="showAddDialog = false" class="cancel-btn">取消</button>
-          <button 
-            @click="confirmAddDocument" 
-            class="confirm-btn"
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showAddDialog = false">取消</el-button>
+          <el-button 
+            type="success" 
+            @click="confirmAddDocument"
             :disabled="!newDocumentPath.trim() || loading"
           >
             添加
-          </button>
-        </div>
-      </div>
-    </div>
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { FolderAdd, Refresh } from '@element-plus/icons-vue'
 import { addDocumentToRAG, reloadRAGDocuments } from '../api'
 import { formatTime } from '../utils'
 
@@ -178,7 +191,6 @@ onMounted(() => {
 .document-manager {
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -203,80 +215,14 @@ onMounted(() => {
   gap: 10px;
 }
 
-.add-doc-btn, .reload-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background-color 0.2s;
-}
-
-.add-doc-btn {
-  background-color: #28a745;
-  color: white;
-}
-
-.add-doc-btn:hover {
-  background-color: #218838;
-}
-
-.reload-btn {
-  background-color: #007bff;
-  color: white;
-}
-
-.reload-btn:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.reload-btn:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-}
-
 .document-info {
   padding: 15px 20px;
-  background-color: #e3f2fd;
   border-bottom: 1px solid #e1e5e9;
-}
-
-.info-text {
-  margin: 0;
-  font-size: 14px;
-  color: #1976d2;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .document-stats {
   padding: 20px;
   border-bottom: 1px solid #e1e5e9;
-}
-
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.stat-item:last-child {
-  margin-bottom: 0;
-}
-
-.stat-label {
-  color: #666;
-  font-weight: 500;
-}
-
-.stat-value {
-  color: #333;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
 }
 
 .operation-log {
@@ -292,46 +238,46 @@ onMounted(() => {
 .log-items {
   max-height: 300px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .log-item {
-  padding: 8px 12px;
-  margin-bottom: 8px;
   border-radius: 4px;
-  font-size: 13px;
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
 }
 
 .log-item.success {
-  background-color: #d4edda;
-  color: #155724;
-  border-left: 3px solid #28a745;
+  --el-card-border-color: #28a745;
+  --el-card-bg-color: #d4edda;
 }
 
 .log-item.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border-left: 3px solid #dc3545;
+  --el-card-border-color: #dc3545;
+  --el-card-bg-color: #f8d7da;
 }
 
 .log-item.warning {
-  background-color: #fff3cd;
-  color: #856404;
-  border-left: 3px solid #ffc107;
+  --el-card-border-color: #ffc107;
+  --el-card-bg-color: #fff3cd;
 }
 
 .log-item.info {
-  background-color: #d1ecf1;
-  color: #0c5460;
-  border-left: 3px solid #17a2b8;
+  --el-card-border-color: #17a2b8;
+  --el-card-bg-color: #d1ecf1;
+}
+
+.log-content {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
 }
 
 .log-time {
   white-space: nowrap;
   opacity: 0.8;
   font-size: 12px;
+  min-width: 80px;
 }
 
 .log-message {
@@ -341,91 +287,25 @@ onMounted(() => {
 
 .loading {
   padding: 20px;
-  text-align: center;
-  color: #666;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.loading-spinner {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* 对话框样式 */
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.dialog {
-  background-color: white;
-  border-radius: 8px;
-  width: 500px;
-  max-width: 90vw;
-  max-height: 80vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.dialog h3 {
-  margin: 0;
-  padding: 20px 24px;
-  font-size: 18px;
-  color: #333;
-  border-bottom: 1px solid #e1e5e9;
 }
 
 .dialog-content {
-  padding: 24px;
-  flex: 1;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .dialog-description {
-  margin: 0 0 16px 0;
+  margin: 0;
   color: #666;
   font-size: 14px;
   line-height: 1.5;
 }
 
-.dialog-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  margin-bottom: 16px;
-  outline: none;
-  transition: border-color 0.2s;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-}
-
-.dialog-input:focus {
-  border-color: #007bff;
-}
-
 .path-examples {
-  background-color: #f8f9fa;
-  padding: 12px;
-  border-radius: 4px;
-  border: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .examples-title {
@@ -435,81 +315,27 @@ onMounted(() => {
   color: #495057;
 }
 
-.examples-list {
-  margin: 0;
-  padding-left: 16px;
-  font-size: 12px;
-  color: #666;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-}
-
-.examples-list li {
-  margin-bottom: 4px;
-}
-
-.dialog-actions {
-  padding: 16px 24px;
-  border-top: 1px solid #e1e5e9;
+.dialog-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.cancel-btn, .confirm-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.cancel-btn {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-.cancel-btn:hover {
-  background-color: #e0e0e0;
-}
-
-.confirm-btn {
-  background-color: #28a745;
-  color: white;
-}
-
-.confirm-btn:hover:not(:disabled) {
-  background-color: #218838;
-}
-
-.confirm-btn:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-}
-
-.icon {
-  font-style: normal;
-}
-
 /* 滚动条样式 */
-.log-items::-webkit-scrollbar,
-.dialog-content::-webkit-scrollbar {
+.log-items::-webkit-scrollbar {
   width: 6px;
 }
 
-.log-items::-webkit-scrollbar-track,
-.dialog-content::-webkit-scrollbar-track {
+.log-items::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
 
-.log-items::-webkit-scrollbar-thumb,
-.dialog-content::-webkit-scrollbar-thumb {
+.log-items::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
 }
 
-.log-items::-webkit-scrollbar-thumb:hover,
-.dialog-content::-webkit-scrollbar-thumb:hover {
+.log-items::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
 
@@ -524,14 +350,9 @@ onMounted(() => {
     justify-content: stretch;
   }
 
-  .add-doc-btn, .reload-btn {
+  .document-actions :deep(.el-button) {
     flex: 1;
     justify-content: center;
-  }
-
-  .stat-item {
-    flex-direction: column;
-    gap: 4px;
   }
 
   .dialog {

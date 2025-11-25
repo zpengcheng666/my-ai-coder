@@ -1,42 +1,42 @@
 <template>
-  <div class="app">
+  <el-container class="app-container">
     <!-- 头部工具栏 -->
-    <div class="app-header">
+    <el-header class="app-header">
       <div class="header-left">
-        <button @click="toggleSidebar" class="sidebar-toggle">
-          <span class="icon">☰</span>
-        </button>
+        <el-button @click="toggleSidebar" class="sidebar-toggle" link>
+          <el-icon size="20"><Menu /></el-icon>
+        </el-button>
         <h1 class="app-title">AI 编程小助手</h1>
       </div>
       <div class="header-center">
         <div class="app-subtitle">{{ currentConversationTitle || '帮助您解答编程学习和求职面试相关问题' }}</div>
       </div>
       <div class="header-right">
-        <button @click="openDocumentManager" class="toolbar-btn" title="文档管理">
-          <span class="icon">📚</span>
-        </button>
-        <button @click="openSettings" class="toolbar-btn" title="设置">
-          <span class="icon">⚙️</span>
-        </button>
+        <el-button @click="openDocumentManager" class="toolbar-btn" link title="文档管理">
+          <el-icon size="20"><Collection /></el-icon>
+        </el-button>
+        <el-button @click="openSettings" class="toolbar-btn" link title="设置">
+          <el-icon size="20"><Setting /></el-icon>
+        </el-button>
         <div class="connection-indicator">
           <span :class="['indicator', connectionStatus]" :title="connectionStatusText"></span>
         </div>
       </div>
-    </div>
+    </el-header>
 
-    <div class="app-body">
+    <el-container class="app-body">
       <!-- 侧边栏 -->
-      <div :class="['sidebar', { collapsed: sidebarCollapsed }]">
+      <el-aside :class="['sidebar', { collapsed: sidebarCollapsed }]">
         <ConversationList
           :userId="settings.userId"
           :currentConversationId="currentConversationId || undefined"
           @conversation-selected="selectConversation"
           @conversation-created="selectConversation"
         />
-      </div>
+      </el-aside>
 
       <!-- 主聊天区域 -->
-      <div class="main-content">
+      <el-main class="main-content">
         <!-- 消息列表 -->
         <div class="messages-container" ref="messagesContainer">
           <div v-if="isLoadingMessages" class="messages-loading">
@@ -89,45 +89,53 @@
           @send-message="sendMessage"
           placeholder="请输入您的编程问题..."
         />
-      </div>
-    </div>
+      </el-main>
+    </el-container>
 
     <!-- 连接状态提示 -->
-    <div v-if="connectionError" class="connection-error">
-      <div class="error-content">
-        <span class="error-icon">⚠️</span>
-        <span>连接服务器失败，请检查后端服务是否启动</span>
-      </div>
-    </div>
+    <el-alert
+      v-if="connectionError"
+      title="连接服务器失败，请检查后端服务是否启动"
+      type="error"
+      center
+      show-icon
+      class="connection-error"
+    />
 
     <!-- 文档管理对话框 -->
-    <div v-if="showDocumentManager" class="dialog-overlay" @click="closeDocumentManager">
-      <div class="dialog-container" @click.stop>
-        <DocumentManager
-          @document-added="onDocumentAdded"
-          @documents-reloaded="onDocumentsReloaded"
-        />
-        <button @click="closeDocumentManager" class="dialog-close">
-          <span class="icon">✕</span>
-        </button>
-      </div>
-    </div>
+    <el-dialog
+      v-if="showDocumentManager"
+      v-model="showDocumentManager"
+      title="知识库管理"
+      width="600px"
+      @close="closeDocumentManager"
+    >
+      <DocumentManager
+        @document-added="onDocumentAdded"
+        @documents-reloaded="onDocumentsReloaded"
+      />
+    </el-dialog>
 
     <!-- 设置对话框 -->
-    <div v-if="showSettings" class="dialog-overlay" @click="closeSettings">
-      <div class="dialog-container" @click.stop>
-        <SettingsPanel
-          :settings="settings"
-          @settings-changed="updateSettings"
-          @close="closeSettings"
-        />
-      </div>
-    </div>
-  </div>
+    <el-dialog
+      v-if="showSettings"
+      v-model="showSettings"
+      title="系统设置"
+      width="600px"
+      @close="closeSettings"
+    >
+      <SettingsPanel
+        :settings="settings"
+        @settings-changed="updateSettings"
+        @close="closeSettings"
+      />
+    </el-dialog>
+  </el-container>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
+import { Menu, Collection, Setting } from '@element-plus/icons-vue'
 import ChatMessage from './components/ChatMessage.vue'
 import ChatInput from './components/ChatInput.vue'
 import LoadingDots from './components/LoadingDots.vue'
@@ -266,11 +274,10 @@ watch(currentAiResponse, () => {
 </script>
 
 <style scoped>
-.app {
+.app-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f0f0f0;
 }
 
 .app-header {
@@ -293,9 +300,6 @@ watch(currentAiResponse, () => {
 
 .sidebar-toggle {
   padding: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
   border-radius: 4px;
   color: #666;
   font-size: 18px;
@@ -338,9 +342,6 @@ watch(currentAiResponse, () => {
 
 .toolbar-btn {
   padding: 8px 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
   border-radius: 4px;
   color: #666;
   font-size: 16px;
@@ -380,7 +381,6 @@ watch(currentAiResponse, () => {
 
 .app-body {
   flex: 1;
-  display: flex;
   overflow: hidden;
 }
 
@@ -389,6 +389,7 @@ watch(currentAiResponse, () => {
   background-color: #f8f9fa;
   border-right: 1px solid #e1e5e9;
   transition: margin-left 0.3s ease;
+  height: calc(100vh - 60px);
 }
 
 .sidebar.collapsed {
@@ -396,7 +397,7 @@ watch(currentAiResponse, () => {
 }
 
 .main-content {
-  flex: 1;
+  padding: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -611,101 +612,8 @@ watch(currentAiResponse, () => {
   top: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #ff4444;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
   z-index: 1000;
   animation: slideDown 0.3s ease-out;
-}
-
-.error-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.error-icon {
-  font-size: 16px;
-}
-
-/* 对话框样式 */
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease-out;
-}
-
-.dialog-container {
-  position: relative;
-  animation: scaleIn 0.3s ease-out;
-}
-
-.dialog-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 32px;
-  height: 32px;
-  background-color: rgba(0, 0, 0, 0.1);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  font-size: 14px;
-  transition: background-color 0.2s;
-  z-index: 1001;
-}
-
-.dialog-close:hover {
-  background-color: rgba(0, 0, 0, 0.2);
-  color: #333;
-}
-
-.icon {
-  font-style: normal;
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateX(-50%) translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
 }
 
 /* 滚动条样式 */

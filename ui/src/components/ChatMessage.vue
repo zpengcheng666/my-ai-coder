@@ -1,9 +1,9 @@
 <template>
   <div class="chat-message" :class="{ 'user-message': isUser, 'ai-message': !isUser }">
     <div class="message-avatar">
-      <div class="avatar" :class="{ 'user-avatar': isUser, 'ai-avatar': !isUser }">
+      <el-avatar :class="{ 'user-avatar': isUser, 'ai-avatar': !isUser }" size="small">
         {{ isUser ? '我' : 'AI' }}
-      </div>
+      </el-avatar>
     </div>
     <div class="message-content">
       <div class="message-bubble">
@@ -87,24 +87,12 @@ const renderedMessage = computed(() => {
   margin: 0 10px;
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: bold;
-  color: white;
-}
-
 .user-avatar {
-  background-color: #007bff;
+  --el-avatar-bg-color: #007bff;
 }
 
 .ai-avatar {
-  background-color: #6c757d;
+  --el-avatar-bg-color: #6c757d;
 }
 
 .message-content {

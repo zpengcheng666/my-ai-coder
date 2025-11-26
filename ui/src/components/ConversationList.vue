@@ -72,7 +72,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { Plus, Search, Delete } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { 
-  getUserConversations, 
+  getConversations, 
   createConversation, 
   deleteConversation as deleteConversationApi 
 } from '../api'
@@ -119,7 +119,7 @@ async function loadConversations(): Promise<void> {
   loading.value = true
   errorMessage.value = null
   try {
-    const response = await getUserConversations(props.userId)
+    const response = await getConversations(props.userId)
     conversations.value = response.conversations || []
   } catch (error) {
     errorMessage.value = '加载会话列表失败'

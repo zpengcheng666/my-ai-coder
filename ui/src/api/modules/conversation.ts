@@ -1,9 +1,5 @@
 import axios from 'axios'
-import { 
-  Conversation, 
-  ConversationApiResponse, 
-  CreateConversationResponse 
-} from '../../types'
+import { Conversation, CreateConversationResponse, ApiResponse } from '../types'
 
 // 配置axios基础URL
 const API_BASE_URL = 'http://localhost:8081/api'
@@ -12,12 +8,12 @@ const API_BASE_URL = 'http://localhost:8081/api'
  * 创建新会话
  * @param userId 用户ID
  * @param title 会话标题
- * @returns 返回创建的会话信息
+ * @returns 创建的会话信息
  */
 export async function createConversation(
-  userId: string, 
-  title: string
-): Promise<CreateConversationResponse> {
+  userId: string = 'default_user',
+  title: string = '新会话'
+): Promise<ApiResponse<CreateConversationResponse>> {
   try {
     const response = await axios.post(`${API_BASE_URL}/ai/conversation`, {
       userId,
@@ -33,22 +29,12 @@ export async function createConversation(
 /**
  * 获取用户会话列表
  * @param userId 用户ID
- * @param page 页码
- * @param size 每页大小
- * @returns 返回会话列表
+ * @returns 会话列表
  */
-export async function getUserConversations(
-  userId: string, 
-  page: number = 0, 
-  size: number = 20
-): Promise<ConversationApiResponse> {
+export async function getConversations(userId: string = 'default_user'): Promise<ApiResponse<Conversation[]>> {
   try {
     const response = await axios.get(`${API_BASE_URL}/ai/conversations`, {
-      params: {
-        userId,
-        page,
-        size
-      }
+      params: { userId }
     })
     return response.data
   } catch (error) {
@@ -58,15 +44,15 @@ export async function getUserConversations(
 }
 
 /**
- * 删除会话（软删除）
+ * 删除会话
  * @param conversationId 会话ID
  * @param userId 用户ID
- * @returns 返回删除结果
+ * @returns 删除结果
  */
 export async function deleteConversation(
-  conversationId: string, 
-  userId: string
-): Promise<any> {
+  conversationId: string,
+  userId: string = 'default_user'
+): Promise<ApiResponse<boolean>> {
   try {
     const response = await axios.delete(`${API_BASE_URL}/ai/conversation/${conversationId}`, {
       params: { userId }
@@ -74,6 +60,31 @@ export async function deleteConversation(
     return response.data
   } catch (error) {
     console.error('删除会话失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 更新会话标题
+ * @param conversationId 会话ID
+ * @param title 新标题
+ * @param userId 用户ID
+ * @returns 更新结果
+ */
+export async function updateConversationTitle(
+  conversationId: string,
+  title: string,
+  userId: string = 'default_user'
+): Promise<ApiResponse<boolean>> {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/ai/conversation/${conversationId}`, {
+      title
+    }, {
+      params: { userId }
+    })
+    return response.data
+  } catch (error) {
+    console.error('更新会话标题失败:', error)
     throw error
   }
 }

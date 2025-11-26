@@ -120,9 +120,12 @@
     <el-dialog
       v-if="showSettings"
       v-model="showSettings"
-      title="系统设置"
-      width="600px"
+      :title="null"
+      width="850px"
+      :show-close="false"
+      :close-on-click-modal="false"
       @close="closeSettings"
+      class="settings-dialog"
     >
       <SettingsPanel
         :settings="settings"
@@ -706,5 +709,24 @@ watch(currentAiResponse, () => {
   .app-title {
     font-size: 16px;
   }
+}
+
+/* 设置对话框样式 */
+:deep(.settings-dialog) {
+  border-radius: 12px;
+}
+
+:deep(.settings-dialog .el-dialog) {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.settings-dialog .el-dialog__header) {
+  display: none;
+}
+
+:deep(.settings-dialog .el-dialog__body) {
+  padding: 0;
 }
 </style>

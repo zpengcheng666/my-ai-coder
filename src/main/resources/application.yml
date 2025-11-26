@@ -130,7 +130,7 @@ rag:
     # 向量存储的具体实现配置
     store:
       # 存储类型，可选值为redis(持久化存储)或memory(内存存储)
-      type: redis  # redis 或 memory
+      type: memory  # redis 或 memory
 
   # 文本分段配置部分,控制文档切分为文本段落的策略参数
   segment:

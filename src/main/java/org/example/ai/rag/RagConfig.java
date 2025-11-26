@@ -3,6 +3,7 @@ package org.example.ai.rag;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 
+import java.nio.file.Paths;
 import java.util.List;
 import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
 import dev.langchain4j.data.segment.TextSegment;
@@ -23,14 +24,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RagConfig {
 
-    @Value("${rag.documents.path}")
-    private String documentsPath;
-
     @Resource
     private EmbeddingModel embeddingModel;
 
     @Resource
     private EmbeddingStore<TextSegment> embeddingStore;
+    
+    @Resource
+    private RagUtils ragUtils;
 
 //    @Resource
 //    private OpenAiChatModel openAiChatModel;
@@ -38,7 +39,8 @@ public class RagConfig {
     @Bean
     public ContentRetriever contentRetriever() {
         //1.rag 加载文档目录中的所有文档
-        List<Document> documents = FileSystemDocumentLoader.loadDocuments(documentsPath);
+        String actualDocumentsPath = ragUtils.getActualDocumentsPath();
+        List<Document> documents = FileSystemDocumentLoader.loadDocuments(Paths.get(actualDocumentsPath));
 
         //2.文档切割，每个文档按照段落来切割，最大1000个字符，每次最大重叠200个字符
         DocumentByParagraphSplitter documentSplitter = new DocumentByParagraphSplitter(1000, 200 );

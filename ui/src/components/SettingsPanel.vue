@@ -15,349 +15,213 @@
       />
     </div>
 
-    <div class="settings-content">
-      <!-- 用户设置 -->
-      <el-card class="settings-section" shadow="hover">
-        <template #header>
-          <div class="card-header">
-            <el-icon class="section-icon"><User /></el-icon>
-            <span class="section-title">用户设置</span>
+    <el-scrollbar class="settings-content-scrollbar">
+      <div class="settings-content">
+        <!-- 用户设置 -->
+        <el-card class="settings-section" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <el-icon class="section-icon"><User /></el-icon>
+              <span class="section-title">用户设置</span>
+            </div>
+          </template>
+          <div class="user-info-display">
+            <div class="user-info-item">
+              <label class="user-info-label">用户ID:</label>
+              <span class="user-info-value">{{ localSettings.userId || '未设置' }}</span>
+            </div>
+            <div class="user-info-item">
+              <label class="user-info-label">用户名称:</label>
+              <span class="user-info-value">{{ localSettings.userName || '未设置' }}</span>
+            </div>
           </div>
-        </template>
-        <div class="setting-item">
-          <div class="setting-label-wrapper">
-            <el-icon class="label-icon"><UserFilled /></el-icon>
-            <label class="setting-label">用户ID</label>
-          </div>
-          <el-input
-            v-model="localSettings.userId"
-            placeholder="输入用户ID"
-            @input="saveSettings"
-            clearable
-            class="setting-input"
-          >
-            <template #prefix>
-              <el-icon><Key /></el-icon>
-            </template>
-          </el-input>
-          <div class="setting-description">
-            <el-icon class="desc-icon"><InfoFilled /></el-icon>
-            用于标识您的身份，会话记录将与此ID关联
-          </div>
-        </div>
-        <el-divider />
-        <div class="setting-item">
-          <div class="setting-label-wrapper">
-            <el-icon class="label-icon"><Avatar /></el-icon>
-            <label class="setting-label">用户名称</label>
-          </div>
-          <el-input
-            v-model="localSettings.userName"
-            placeholder="输入用户名称"
-            @input="saveSettings"
-            clearable
-            class="setting-input"
-          >
-            <template #prefix>
-              <el-icon><Edit /></el-icon>
-            </template>
-          </el-input>
-          <div class="setting-description">
-            <el-icon class="desc-icon"><InfoFilled /></el-icon>
-            显示在界面上的用户名称
-          </div>
-        </div>
-      </el-card>
+        </el-card>
 
-      <!-- 聊天设置 -->
-      <el-card class="settings-section" shadow="hover">
-        <template #header>
-          <div class="card-header">
-            <el-icon class="section-icon"><ChatDotRound /></el-icon>
-            <span class="section-title">聊天设置</span>
+        <!-- 聊天设置 -->
+        <el-card class="settings-section" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <el-icon class="section-icon"><ChatDotRound /></el-icon>
+              <span class="section-title">聊天设置</span>
+            </div>
+          </template>
+          <div class="setting-item">
+            <div class="setting-label-wrapper">
+              <el-icon class="label-icon"><VideoPlay /></el-icon>
+              <label class="setting-label">启用流式输出</label>
+            </div>
+            <div class="switch-wrapper">
+              <el-switch
+                v-model="localSettings.streamMode"
+                @change="saveSettings"
+                active-text="开启"
+                inactive-text="关闭"
+              />
+              <span class="switch-status">{{ localSettings.streamMode ? '已开启' : '已关闭' }}</span>
+            </div>
+            <div class="setting-description">
+              <el-icon class="desc-icon"><InfoFilled /></el-icon>
+              AI回复时实时显示内容（推荐开启）
+            </div>
           </div>
-        </template>
-        <div class="setting-item">
-          <div class="setting-label-wrapper">
-            <el-icon class="label-icon"><VideoPlay /></el-icon>
-            <label class="setting-label">启用流式输出</label>
+          <el-divider />
+          <div class="setting-item">
+            <div class="setting-label-wrapper">
+              <el-icon class="label-icon"><ArrowDownBold /></el-icon>
+              <label class="setting-label">自动滚动到底部</label>
+            </div>
+            <div class="switch-wrapper">
+              <el-switch
+                v-model="localSettings.autoScroll"
+                @change="saveSettings"
+                active-text="开启"
+                inactive-text="关闭"
+              />
+              <span class="switch-status">{{ localSettings.autoScroll ? '已开启' : '已关闭' }}</span>
+            </div>
+            <div class="setting-description">
+              <el-icon class="desc-icon"><InfoFilled /></el-icon>
+              新消息到达时自动滚动到聊天底部
+            </div>
           </div>
-          <div class="switch-wrapper">
-            <el-switch
-              v-model="localSettings.streamMode"
-              @change="saveSettings"
-              active-text="开启"
-              inactive-text="关闭"
-            />
-            <span class="switch-status">{{ localSettings.streamMode ? '已开启' : '已关闭' }}</span>
+          <el-divider />
+          <div class="setting-item">
+            <div class="setting-label-wrapper">
+              <el-icon class="label-icon"><Clock /></el-icon>
+              <label class="setting-label">显示消息时间</label>
+            </div>
+            <div class="switch-wrapper">
+              <el-switch
+                v-model="localSettings.showTimestamp"
+                @change="saveSettings"
+                active-text="开启"
+                inactive-text="关闭"
+              />
+              <span class="switch-status">{{ localSettings.showTimestamp ? '已开启' : '已关闭' }}</span>
+            </div>
+            <div class="setting-description">
+              <el-icon class="desc-icon"><InfoFilled /></el-icon>
+              在消息中显示发送时间
+            </div>
           </div>
-          <div class="setting-description">
-            <el-icon class="desc-icon"><InfoFilled /></el-icon>
-            AI回复时实时显示内容（推荐开启）
-          </div>
-        </div>
-        <el-divider />
-        <div class="setting-item">
-          <div class="setting-label-wrapper">
-            <el-icon class="label-icon"><ArrowDownBold /></el-icon>
-            <label class="setting-label">自动滚动到底部</label>
-          </div>
-          <div class="switch-wrapper">
-            <el-switch
-              v-model="localSettings.autoScroll"
-              @change="saveSettings"
-              active-text="开启"
-              inactive-text="关闭"
-            />
-            <span class="switch-status">{{ localSettings.autoScroll ? '已开启' : '已关闭' }}</span>
-          </div>
-          <div class="setting-description">
-            <el-icon class="desc-icon"><InfoFilled /></el-icon>
-            新消息到达时自动滚动到聊天底部
-          </div>
-        </div>
-        <el-divider />
-        <div class="setting-item">
-          <div class="setting-label-wrapper">
-            <el-icon class="label-icon"><Clock /></el-icon>
-            <label class="setting-label">显示消息时间</label>
-          </div>
-          <div class="switch-wrapper">
-            <el-switch
-              v-model="localSettings.showTimestamp"
-              @change="saveSettings"
-              active-text="开启"
-              inactive-text="关闭"
-            />
-            <span class="switch-status">{{ localSettings.showTimestamp ? '已开启' : '已关闭' }}</span>
-          </div>
-          <div class="setting-description">
-            <el-icon class="desc-icon"><InfoFilled /></el-icon>
-            在消息中显示发送时间
-          </div>
-        </div>
-      </el-card>
+        </el-card>
 
-      <!-- 连接设置 -->
-      <el-card class="settings-section" shadow="hover">
-        <template #header>
-          <div class="card-header">
-            <el-icon class="section-icon"><Connection /></el-icon>
-            <span class="section-title">连接设置</span>
-          </div>
-        </template>
-        <div class="setting-item">
-          <div class="setting-label-wrapper">
-            <el-icon class="label-icon"><Link /></el-icon>
-            <label class="setting-label">后端服务地址</label>
-          </div>
-          <el-input
-            v-model="localSettings.apiBaseUrl"
-            placeholder="http://localhost:8081/api"
-            @input="saveSettings"
-            clearable
-            class="setting-input"
-          >
-            <template #prefix>
-              <el-icon><Position /></el-icon>
-            </template>
-          </el-input>
-          <div class="setting-description">
-            <el-icon class="desc-icon"><InfoFilled /></el-icon>
-            AI助手后端服务的地址
-          </div>
-        </div>
-        <el-divider />
-        <div class="setting-item">
-          <div class="setting-label-wrapper">
-            <el-icon class="label-icon"><Timer /></el-icon>
-            <label class="setting-label">连接超时时间</label>
-          </div>
-          <div class="timeout-wrapper">
-            <el-input-number
-              v-model="localSettings.timeout"
-              :min="5"
-              :max="60"
-              :step="5"
-              @change="saveSettings"
-              class="timeout-input"
-            />
-            <span class="timeout-unit">秒</span>
-          </div>
-          <div class="setting-description">
-            <el-icon class="desc-icon"><InfoFilled /></el-icon>
-            网络请求的超时时间（范围：5-60秒）
-          </div>
-        </div>
-      </el-card>
+        <!-- 连接设置 -->
+        <el-card class="settings-section" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <el-icon class="section-icon"><Connection /></el-icon>
+              <span class="section-title">连接设置</span>
+            </div>
+          </template>
+          <div class="setting-item">
+            <div class="setting-label-wrapper">
+              <el-icon class="label-icon"><Link /></el-icon>
+              <label class="setting-label">后端服务地址</label>
+            </div>
+            <el-input
+              v-model="localSettings.apiBaseUrl"
+              placeholder="http://localhost:8081/api"
+              @input="saveSettings"
+              clearable
+              class="setting-input"
+            >
+              <template #prefix>
+                <el-icon><Position /></el-icon>
+              </template>
+            </el-input>
 
-      <!-- 系统信息 -->
-      <el-card class="settings-section" shadow="hover">
-        <template #header>
-          <div class="card-header">
-            <el-icon class="section-icon"><Monitor /></el-icon>
-            <span class="section-title">系统信息</span>
           </div>
-        </template>
-        <div class="system-info">
-          <el-descriptions :column="1" size="default" border class="info-descriptions">
-            <el-descriptions-item label="连接状态">
-              <div class="status-wrapper">
-                <el-tag 
-                  :type="connectionStatus.type || 'info'" 
-                  effect="dark"
-                  size="large"
-                  class="status-tag"
-                >
-                  <el-icon class="status-icon">
-                    <component :is="connectionStatus.type === 'success' ? 'CircleCheck' : connectionStatus.type === 'danger' ? 'CircleClose' : 'QuestionFilled'" />
-                  </el-icon>
-                  {{ connectionStatus.text || '未知' }}
-                </el-tag>
-              </div>
-            </el-descriptions-item>
-            <el-descriptions-item label="后端地址">
-              <div class="info-value">
-                <el-icon class="value-icon"><Position /></el-icon>
-                <span class="value-text">{{ localSettings.apiBaseUrl || '未设置' }}</span>
-              </div>
-            </el-descriptions-item>
-            <el-descriptions-item label="超时时间">
-              <div class="info-value">
-                <el-icon class="value-icon"><Timer /></el-icon>
-                <span class="value-text">{{ localSettings.timeout || 60 }} 秒</span>
-              </div>
-            </el-descriptions-item>
-            <el-descriptions-item label="版本信息">
-              <div class="version-info">
-                <el-tag type="info" effect="plain" size="default">v1.0.0</el-tag>
-              </div>
-            </el-descriptions-item>
-            <el-descriptions-item label="最后检查">
-              <div class="check-time">
-                <el-icon class="time-icon"><Clock /></el-icon>
-                <span>{{ lastHealthCheck || '未检查' }}</span>
-              </div>
-            </el-descriptions-item>
-          </el-descriptions>
-          <div class="health-check-action">
+          <el-divider />
+          <div class="setting-item">
+            <div class="setting-label-wrapper">
+              <el-icon class="label-icon"><Timer /></el-icon>
+              <label class="setting-label">连接超时时间</label>
+            </div>
+            <div class="timeout-wrapper">
+              <el-input-number
+                v-model="localSettings.timeout"
+                :min="5"
+                :max="60"
+                :step="5"
+                @change="saveSettings"
+                class="timeout-input"
+              />
+              <span class="timeout-unit">秒</span>
+            </div>
+            <div class="setting-description">
+              <el-icon class="desc-icon"><InfoFilled /></el-icon>
+              网络请求的超时时间（范围：5-60秒）
+            </div>
+          </div>
+        </el-card>
+
+        <!-- 数据管理 -->
+        <el-card class="settings-section" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <el-icon class="section-icon"><FolderOpened /></el-icon>
+              <span class="section-title">数据管理</span>
+            </div>
+          </template>
+          <div class="data-actions">
             <el-button 
-              @click="checkHealth" 
-              :loading="checking" 
+              @click="exportData" 
+              type="success" 
+              size="large"
+              class="action-btn export-btn"
+            >
+              <el-icon><Upload /></el-icon>
+              <span>导出设置</span>
+              <div class="btn-desc">备份当前配置</div>
+            </el-button>
+            <el-button 
+              @click="importData" 
               type="primary" 
               size="large"
-              class="health-check-btn"
+              class="action-btn import-btn"
             >
-              <el-icon v-if="!checking"><Search /></el-icon>
-              {{ checking ? '检查中...' : '检查连接状态' }}
+              <el-icon><Download /></el-icon>
+              <span>导入设置</span>
+              <div class="btn-desc">恢复配置</div>
+            </el-button>
+            <el-button 
+              @click="resetSettings" 
+              type="warning" 
+              size="large"
+              class="action-btn reset-btn"
+            >
+              <el-icon><Refresh /></el-icon>
+              <span>重置设置</span>
+              <div class="btn-desc">恢复默认值</div>
             </el-button>
           </div>
-        </div>
-      </el-card>
-
-      <!-- 当前设置汇总 -->
-      <el-card class="settings-section" shadow="hover">
-        <template #header>
-          <div class="card-header">
-            <el-icon class="section-icon"><List /></el-icon>
-            <span class="section-title">当前设置汇总</span>
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".json"
+            style="display: none"
+            @change="handleFileImport"
+          />
+          <div class="data-info">
+            <el-alert
+              title="数据管理提示"
+              type="info"
+              :closable="false"
+              show-icon
+            >
+              <template #default>
+                <div class="alert-content">
+                  <p>• 导出设置：将当前所有配置保存为JSON文件</p>
+                  <p>• 导入设置：从JSON文件恢复之前的配置</p>
+                  <p>• 重置设置：将所有设置恢复为默认值</p>
+                </div>
+              </template>
+            </el-alert>
           </div>
-        </template>
-        <div class="settings-summary">
-          <el-descriptions :column="2" size="default" border class="summary-descriptions">
-            <el-descriptions-item label="用户ID">
-              <span class="summary-value">{{ localSettings.userId || '未设置' }}</span>
-            </el-descriptions-item>
-            <el-descriptions-item label="用户名称">
-              <span class="summary-value">{{ localSettings.userName || '未设置' }}</span>
-            </el-descriptions-item>
-            <el-descriptions-item label="流式输出">
-              <el-tag :type="localSettings.streamMode ? 'success' : 'info'" size="small">
-                {{ localSettings.streamMode ? '已开启' : '已关闭' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="自动滚动">
-              <el-tag :type="localSettings.autoScroll ? 'success' : 'info'" size="small">
-                {{ localSettings.autoScroll ? '已开启' : '已关闭' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="显示时间">
-              <el-tag :type="localSettings.showTimestamp ? 'success' : 'info'" size="small">
-                {{ localSettings.showTimestamp ? '已开启' : '已关闭' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="超时时间">
-              <span class="summary-value">{{ localSettings.timeout || 60 }} 秒</span>
-            </el-descriptions-item>
-          </el-descriptions>
-        </div>
-      </el-card>
-
-      <!-- 数据管理 -->
-      <el-card class="settings-section" shadow="hover">
-        <template #header>
-          <div class="card-header">
-            <el-icon class="section-icon"><FolderOpened /></el-icon>
-            <span class="section-title">数据管理</span>
-          </div>
-        </template>
-        <div class="data-actions">
-          <el-button 
-            @click="exportData" 
-            type="success" 
-            size="large"
-            class="action-btn export-btn"
-          >
-            <el-icon><Upload /></el-icon>
-            <span>导出设置</span>
-            <div class="btn-desc">备份当前配置</div>
-          </el-button>
-          <el-button 
-            @click="importData" 
-            type="primary" 
-            size="large"
-            class="action-btn import-btn"
-          >
-            <el-icon><Download /></el-icon>
-            <span>导入设置</span>
-            <div class="btn-desc">恢复配置</div>
-          </el-button>
-          <el-button 
-            @click="resetSettings" 
-            type="warning" 
-            size="large"
-            class="action-btn reset-btn"
-          >
-            <el-icon><Refresh /></el-icon>
-            <span>重置设置</span>
-            <div class="btn-desc">恢复默认值</div>
-          </el-button>
-        </div>
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".json"
-          style="display: none"
-          @change="handleFileImport"
-        />
-        <div class="data-info">
-          <el-alert
-            title="数据管理提示"
-            type="info"
-            :closable="false"
-            show-icon
-          >
-            <template #default>
-              <div class="alert-content">
-                <p>• 导出设置：将当前所有配置保存为JSON文件</p>
-                <p>• 导入设置：从JSON文件恢复之前的配置</p>
-                <p>• 重置设置：将所有设置恢复为默认值</p>
-              </div>
-            </template>
-          </el-alert>
-        </div>
-      </el-card>
-    </div>
+        </el-card>
+      </div>
+    </el-scrollbar>
   </div>
 </template>
 
@@ -634,9 +498,9 @@ watch(() => props.settings, (newSettings) => {
 .settings-panel {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-radius: 12px;
+  width: 90vw;
   max-width: 800px;
-  width: 100%;
-  max-height: 85vh;
+  height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -684,10 +548,13 @@ watch(() => props.settings, (newSettings) => {
   transform: rotate(90deg);
 }
 
+.settings-content-scrollbar {
+  flex: 1;
+  overflow-y: hidden;
+}
+
 /* 内容区域 */
 .settings-content {
-  flex: 1;
-  overflow-y: auto;
   padding: 24px 28px;
   display: flex;
   flex-direction: column;
@@ -773,19 +640,6 @@ watch(() => props.settings, (newSettings) => {
   box-shadow: 0 0 0 1px #667eea inset;
 }
 
-.setting-description {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 8px;
-  font-size: 13px;
-  color: #909399;
-  line-height: 1.6;
-  padding: 8px 12px;
-  background-color: #f5f7fa;
-  border-radius: 6px;
-  border-left: 3px solid #e4e7ed;
-}
 
 .desc-icon {
   font-size: 14px;
@@ -927,6 +781,36 @@ watch(() => props.settings, (newSettings) => {
   font-weight: 500;
 }
 
+.user-info-display {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.user-info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info-label {
+  font-weight: 600;
+  color: #606266;
+  min-width: 80px;
+  text-align: right;
+}
+
+.user-info-value {
+  flex: 1;
+  color: #303133;
+  font-size: 15px;
+  padding: 8px 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border: 1px solid #e4e7ed;
+}
+
 .health-check-action {
   margin-top: 20px;
 }
@@ -974,10 +858,10 @@ watch(() => props.settings, (newSettings) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 100px;
-  padding: 16px;
-  border-radius: 10px;
+  gap: 6px;
+  height: 70px;
+  padding: 12px;
+  border-radius: 8px;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -1006,21 +890,21 @@ watch(() => props.settings, (newSettings) => {
 }
 
 .action-btn :deep(.el-icon) {
-  font-size: 28px;
-  margin-bottom: 4px;
+  font-size: 22px;
+  margin-bottom: 2px;
   color: white !important;
 }
 
 .action-btn span {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: white !important;
 }
 
 .btn-desc {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.9;
-  margin-top: 4px;
+  margin-top: 2px;
   color: white !important;
 }
 

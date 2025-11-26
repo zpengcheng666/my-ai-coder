@@ -14,7 +14,7 @@ import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
-// import dev.langchain4j.store.embedding.redis.RedisEmbeddingStore;
+import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,11 +41,8 @@ public class EnhancedRagConfig {
     @Resource
     private EmbeddingModel embeddingModel;
 
-    // @Resource
-    // private RedisConnectionFactory redisConnectionFactory;
-
-    @Value("${rag.documents.path:src/main/resources/docs}")
-    private String documentsPath;
+    @Resource
+    private RagUtils ragUtils;
 
     @Value("${rag.vector.store.type:redis}")
     private String vectorStoreType;
@@ -63,24 +60,30 @@ public class EnhancedRagConfig {
     private double minScore;
 
     /**
-     * 向量存储配置
+     * 向量存储配置,默认使用内存向量存储,可以替换为Redis
+     * 如果使用Redis向量存储实现，需要Redis Stack或RediSearch模块，需要用docker来启动RediSearch模块
      */
     @Bean
     @Primary
     public EmbeddingStore<TextSegment> enhancedEmbeddingStore() {
-        // 暂时使用内存向量存储，Redis向量存储需要额外配置
+        if ("redis".equalsIgnoreCase(vectorStoreType)) {
+            try {
+                log.info("尝试使用Redis向量存储");
+                RedisEmbeddingStore redisEmbeddingStore = RedisEmbeddingStore.builder()
+                        .host("localhost")
+                        .port(6379)
+                        .dimension(1536)
+                        .build();
+                return redisEmbeddingStore;
+            } catch (Exception e) {
+                log.error("连接Redis向量存储失败: {}", e.getMessage());
+                log.info("回退到内存向量存储");
+            }
+        }
+        
+        // 默认使用内存向量存储
         log.info("使用内存向量存储");
         return new InMemoryEmbeddingStore<>();
-        
-        // TODO: Redis向量存储实现，需要Redis Stack或RediSearch模块
-        // if ("redis".equalsIgnoreCase(vectorStoreType)) {
-        //     log.info("使用Redis向量存储");
-        //     return RedisEmbeddingStore.builder()
-        //             .connectionFactory(redisConnectionFactory)
-        //             .dimension(1536)
-        //             .keyPrefix("vector:")
-        //             .build();
-        // }
     }
 
     /**
@@ -158,11 +161,12 @@ public class EnhancedRagConfig {
     @Async
     public void loadDocumentsAsync(EmbeddingStoreIngestor embeddingStoreIngestor) {
         try {
-            log.info("开始加载RAG文档，路径：{}", documentsPath);
+            String actualDocumentsPath = ragUtils.getActualDocumentsPath();
+            log.info("开始加载RAG文档，路径：{}", actualDocumentsPath);
             
-            Path docsPath = Paths.get(documentsPath);
+            Path docsPath = Paths.get(actualDocumentsPath);
             if (!docsPath.toFile().exists()) {
-                log.warn("文档路径不存在：{}", documentsPath);
+                log.warn("文档路径不存在：{}", actualDocumentsPath);
                 return;
             }
 

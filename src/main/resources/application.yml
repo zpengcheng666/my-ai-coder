@@ -123,13 +123,21 @@ rag:
   # 文档配置部分,定义RAG系统中文档资源的存储路径
   documents:
     # 文档文件所在的目录路径
-    path: src/main/resources/docs
+    path: 
+  # 不同操作系统的默认文档路径配置
+  os:
+    windows:
+      documents:
+        path: D:\rag\docs
+    linux:
+      documents:
+        path: /var/rag/docs
 
   # 向量存储配置部分,配置向量数据的存储方式和相关参数
   vector:
     # 向量存储的具体实现配置
     store:
-      # 存储类型，可选值为redis(持久化存储)或memory(内存存储)
+      # 存储类型，可选值为redis(持久化存储)或 memory(内存存储),目前默认使用内存存储，如果使用redissearch存储，请确保已安装Redis和Redisearch
       type: memory  # redis 或 memory
 
   # 文本分段配置部分,控制文档切分为文本段落的策略参数

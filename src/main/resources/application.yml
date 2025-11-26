@@ -3,31 +3,53 @@ server:
   servlet:
     context-path: /api
 
+# Spring框架任务执行和调度配置
+# 配置了异步任务执行器和定时任务调度器的线程池参数
 spring:
+  # 任务相关配置
   task:
+    # 异步任务执行配置
     execution:
+      # 线程池配置
       pool:
+        # 核心线程数，线程池保持的最小线程数量
         core-size: 5
+        # 最大线程数，线程池允许创建的最大线程数量
         max-size: 20
+        # 任务队列容量，等待执行的任务队列最大长度
         queue-capacity: 500
+    # 定时任务调度配置
     scheduling:
+      # 线程池配置
       pool:
+        # 调度线程池大小，用于执行定时任务的线程数量
         size: 5
+
   application:
     name: ai-code-helper
 
-  # Redis配置
+  # Redis数据库连接配置
+  # 配置应用程序连接Redis数据库所需的基本连接参数和连接池设置
   data:
     redis:
+      # Redis服务器主机地址
       host: localhost
+      # Redis服务器端口号
       port: 6379
+      # Redis数据库索引号，范围0-15
       database: 0
+      # 连接超时时间，单位毫秒
       timeout: 3000ms
+      # Lettuce客户端连接池配置
       lettuce:
         pool:
+          # 连接池最大活跃连接数
           max-active: 20
+          # 获取连接的最大等待时间，-1表示无限等待
           max-wait: -1ms
+          # 连接池最大空闲连接数
           max-idle: 8
+          # 连接池最小空闲连接数
           min-idle: 0
 
   # MySQL配置
@@ -57,40 +79,80 @@ mybatis-plus:
     # 国际化资源文件路径
     basename: i18n/messages
 
+# langchain4j 配置
+# 用于配置 LangChain4j 框架的相关服务和社区模型设置
 langchain4j:
-  # 禁用自动扫描 @AiService，因为项目中使用手动构建方式
+  # 服务配置部分
   service:
+    # 是否启用自动扫描功能
     scan-enabled: false
+
+  # 社区模型配置部分
   community:
+    # DashScope 平台相关配置
     dashscope:
+      # 聊天模型配置
       chat-model:
+        # 模型名称，指定使用的通义千问模型版本
         model-name: qwen-max
-        api-key:
-      streaming-chat-model:
-        model-name: qwen-max
-        api-key:
-      embedding-model:
-        model-name: text-embedding-v4
+        # API 密钥，用于访问 DashScope 服务的认证凭证
         api-key:
 
+      # 流式聊天模型配置
+      streaming-chat-model:
+        # 模型名称，指定使用的通义千问模型版本（流式输出）
+        model-name: qwen-max
+        # API 密钥，用于访问 DashScope 服务的认证凭证（流式输出）
+        api-key:
+
+      # 嵌入模型配置
+      embedding-model:
+        # 模型名称，指定使用的文本嵌入模型版本
+        model-name: text-embedding-v4
+        # API 密钥，用于访问 DashScope 服务的认证凭证（嵌入模型）
+        api-key:
+
+# bigmodel配置项，用于配置大模型 MCP 的相关的API密钥信息
+# 配置项说明: api-key: 大模型服务的认证密钥，用于API调用的身份验证，格式为: {用户标识}.{访问令牌}
 bigmodel:
   api-key:
 
 # RAG配置
+# 配置文档检索增强生成(RAG)相关参数，包括文档路径、向量存储、文本分段和检索策略等核心组件
 rag:
+  # 文档配置部分,定义RAG系统中文档资源的存储路径
   documents:
+    # 文档文件所在的目录路径
     path: src/main/resources/docs
+
+  # 向量存储配置部分,配置向量数据的存储方式和相关参数
   vector:
+    # 向量存储的具体实现配置
     store:
+      # 存储类型，可选值为redis(持久化存储)或memory(内存存储)
       type: redis  # redis 或 memory
+
+  # 文本分段配置部分,控制文档切分为文本段落的策略参数
   segment:
+    # 每个文本段落的最大字符数，超过此长度将进行分割
     max-size: 800
+    # 相邻文本段落之间的最大重叠字符数，用于保持上下文连贯性
     max-overlap: 200
+
+  # 检索配置部分,定义从向量库中检索相关文档的策略和阈值
   retrieval:
+    # 单次检索返回的最大结果数量
     max-results: 10
+    # 检索结果的最小相似度分数阈值，低于此分数的结果将被过滤
     min-score: 0.7
 
+
 # 聊天内存配置
+# 用于设置聊天会话中保存的最大消息数量
+# 防止内存占用过大并保持聊天上下文的相关性
 chat:
   memory:
+    # 设置聊天内存中保存的最大消息条数
+    # 该值限制了对话历史记录的长度，超过此数量的旧消息将被移除
+    # 建议根据应用场景和内存资源合理设置此值
     max-messages: 20

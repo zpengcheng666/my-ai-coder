@@ -4,7 +4,7 @@
     <div class="settings-header">
       <div class="header-title-wrapper">
         <el-icon class="header-icon"><Setting /></el-icon>
-        <h3>系统设置</h3>
+        <h4>系统设置</h4>
       </div>
       <el-button 
         @click="$emit('close')" 
@@ -509,7 +509,7 @@ watch(() => props.settings, (newSettings) => {
 
 /* 头部样式 */
 .settings-header {
-  padding: 24px 28px;
+  padding: 16px 20px; /* 减小头部内边距 */
   border-bottom: 2px solid #e8ecf0;
   display: flex;
   justify-content: space-between;
@@ -521,18 +521,18 @@ watch(() => props.settings, (newSettings) => {
 .header-title-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px; /* 减小图标和标题间距 */
 }
 
 .header-icon {
-  font-size: 24px;
+  font-size: 20px; /* 减小图标大小 */
   color: white;
 }
 
-.settings-header h3 {
+.settings-header h4 { /* 修改为h4选择器 */
   margin: 0;
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 18px; /* 减小字体大小 */
+  font-weight: 500;
   color: white;
   letter-spacing: 0.5px;
 }
@@ -541,10 +541,16 @@ watch(() => props.settings, (newSettings) => {
   color: white;
   font-size: 20px;
   transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.2); /* 添加背景色使按钮更明显 */
+  width: 32px; /* 设置固定宽度 */
+  height: 32px; /* 设置固定高度 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.3); /* 调整悬停效果 */
   transform: rotate(90deg);
 }
 
@@ -555,10 +561,10 @@ watch(() => props.settings, (newSettings) => {
 
 /* 内容区域 */
 .settings-content {
-  padding: 24px 28px;
+  padding: 20px; /* 减小内边距 */
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px; /* 减小元素间距 */
   background-color: #f5f7fa;
 }
 

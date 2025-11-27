@@ -6,7 +6,7 @@
         <el-button @click="toggleSidebar" class="sidebar-toggle" link>
           <el-icon size="20"><Menu /></el-icon>
         </el-button>
-        <h1 class="app-title">AI 编程小助手</h1>
+        <h1 class="app-title">AI 编程知识库</h1>
       </div>
       <div class="header-center">
         <div class="app-subtitle">{{ currentConversationTitle || '帮助您解答编程学习和求职面试相关问题' }}</div>
@@ -46,7 +46,7 @@
           <div v-if="!isLoadingMessages && messages.length === 0" class="welcome-message">
             <div class="welcome-content">
               <div class="welcome-icon">🤖</div>
-              <h2>欢迎使用 AI 编程小助手</h2>
+              <h2>欢迎使用 AI 编程知识库</h2>
               <p>我可以帮助您：</p>
               <ul>
                 <li>解答编程技术问题</li>

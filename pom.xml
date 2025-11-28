@@ -113,6 +113,18 @@
             <artifactId>langchain4j-community-redis</artifactId>
             <version>1.1.0-beta7</version>
         </dependency>
+        <!-- 添加PDF文档解析支持 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-parser-apache-pdfbox</artifactId>
+            <version>1.1.0-beta7</version>
+        </dependency>
+        <!-- 添加Office文档解析支持 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-parser-apache-poi</artifactId>
+            <version>1.1.0-beta7</version>
+        </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>

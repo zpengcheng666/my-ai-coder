@@ -3,9 +3,9 @@ package org.example.ai.rag;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.DocumentSplitter;
-import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
-import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
+import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;
+import dev.langchain4j.data.document.parser.apache.poi.ApachePoiDocumentParser;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.data.segment.TextSegmentTransformer;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -22,13 +22,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
-
 import org.springframework.scheduling.annotation.Async;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import java.io.InputStream;
 
 /**
  * 增强的RAG配置
@@ -41,8 +37,9 @@ public class EnhancedRagConfig {
     @Resource
     private EmbeddingModel embeddingModel;
 
+    @Lazy
     @Resource
-    private RagUtils ragUtils;
+    private DocumentProcessingService documentProcessingService;
 
     @Value("${rag.vector.store.type:redis}")
     private String vectorStoreType;
@@ -52,6 +49,18 @@ public class EnhancedRagConfig {
 
     @Value("${rag.segment.max-overlap:200}")
     private int maxOverlap;
+
+    @Value("${rag.segment.smart.small-threshold:1500}")
+    private int smallDocumentThreshold;
+
+    @Value("${rag.segment.smart.large-threshold:8000}")
+    private int largeDocumentThreshold;
+
+    @Value("${rag.segment.smart.small-size:600}")
+    private int smallDocumentSegmentSize;
+
+    @Value("${rag.segment.smart.large-size:400}")
+    private int largeDocumentSegmentSize;
 
     @Value("${rag.retrieval.max-results:10}")
     private int maxResults;
@@ -87,7 +96,7 @@ public class EnhancedRagConfig {
     }
 
     /**
-     * 文档解析器
+     * 文档解析器 - 使用默认的文本解析器
      */
     @Bean
     public DocumentParser documentParser() {
@@ -99,7 +108,14 @@ public class EnhancedRagConfig {
      */
     @Bean
     public DocumentSplitter documentSplitter() {
-        return new DocumentByParagraphSplitter(maxSegmentSize, maxOverlap);
+        return new SmartDocumentSplitter(
+                maxSegmentSize,
+                smallDocumentSegmentSize,
+                largeDocumentSegmentSize,
+                smallDocumentThreshold,
+                largeDocumentThreshold,
+                maxOverlap
+        );
     }
 
     /**
@@ -160,51 +176,14 @@ public class EnhancedRagConfig {
      */
     @Async
     public void loadDocumentsAsync(EmbeddingStoreIngestor embeddingStoreIngestor) {
-        try {
-            String actualDocumentsPath = ragUtils.getActualDocumentsPath();
-            log.info("开始加载RAG文档，路径：{}", actualDocumentsPath);
-            
-            Path docsPath = Paths.get(actualDocumentsPath);
-            if (!docsPath.toFile().exists()) {
-                log.warn("文档路径不存在：{}", actualDocumentsPath);
-                return;
-            }
-
-            // 加载所有文档
-            List<Document> documents = FileSystemDocumentLoader.loadDocuments(docsPath);
-            log.info("找到 {} 个文档", documents.size());
-
-            if (!documents.isEmpty() && embeddingStoreIngestor != null) {
-                // 批量摄取文档
-                embeddingStoreIngestor.ingest(documents);
-                log.info("成功加载 {} 个文档到向量存储", documents.size());
-            }
-            
-        } catch (Exception e) {
-            log.error("加载RAG文档失败", e);
-        }
+        documentProcessingService.ingestAllDocuments(embeddingStoreIngestor, false);
     }
 
     /**
      * 动态添加文档到RAG知识库
      */
     public void addDocument(String filePath, EmbeddingStoreIngestor embeddingStoreIngestor) {
-        try {
-            File file = new File(filePath);
-            if (!file.exists()) {
-                log.warn("文件不存在：{}", filePath);
-                return;
-            }
-
-            Document document = FileSystemDocumentLoader.loadDocument(file.toPath());
-            if (embeddingStoreIngestor != null) {
-                embeddingStoreIngestor.ingest(document);
-                log.info("成功添加文档到RAG知识库：{}", filePath);
-            }
-            
-        } catch (Exception e) {
-            log.error("添加文档失败：{}", filePath, e);
-        }
+        documentProcessingService.ingestSingleDocument(filePath, embeddingStoreIngestor, true);
     }
 
     /**
@@ -212,7 +191,7 @@ public class EnhancedRagConfig {
      */
     public void reloadAllDocuments(EmbeddingStoreIngestor embeddingStoreIngestor) {
         log.info("重新加载所有RAG文档");
-        loadDocumentsAsync(embeddingStoreIngestor);
+        documentProcessingService.ingestAllDocuments(embeddingStoreIngestor, true);
     }
 
     /**

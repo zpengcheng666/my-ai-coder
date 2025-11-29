@@ -79,7 +79,7 @@ public class EnhancedRagConfig {
             try {
                 log.info("尝试使用Redis向量存储");
                 RedisEmbeddingStore redisEmbeddingStore = RedisEmbeddingStore.builder()
-                        .host("localhost")
+                        .host("192.168.10.100")
                         .port(6379)
                         .dimension(1536)
                         .build();

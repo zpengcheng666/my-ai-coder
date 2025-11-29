@@ -63,6 +63,9 @@ public class DocumentProcessingService {
     @Value("${rag.processing.track-state:false}") // 默认不跟踪状态
     private boolean trackState;
 
+    @Value("${rag.processing.state-file-name:.rag-processing-state.json}")
+    private String stateFileName;
+
     /**
      * 全量/增量加载文档.
      *
@@ -78,6 +81,7 @@ public class DocumentProcessingService {
             List<Path> candidates = pathStream
                     .filter(Files::isRegularFile)
                     .filter(this::filterHiddenFile)
+                    .filter(this::filterStateFile)//过滤掉.rag-processing-state.json，使其不加载为知识库
                     .collect(Collectors.toList());
 
             if (candidates.isEmpty()) {
@@ -152,7 +156,17 @@ public class DocumentProcessingService {
 
         AtomicLong ingestedSegments = new AtomicLong();
         try {
-            if (Files.size(path) >= largeFileThresholdBytes) {
+            // 对于PDF等二进制文件，不应使用大文件流式处理逻辑
+            String fileName = path.getFileName().toString();
+            String extension = getFileExtension(fileName).toLowerCase();
+            boolean isBinaryFile = "pdf".equals(extension) || 
+                                  "doc".equals(extension) || 
+                                  "docx".equals(extension) || 
+                                  "xls".equals(extension) || 
+                                  "xlsx".equals(extension);
+
+            // 只对文本文件使用大文件流式处理
+            if (!isBinaryFile && Files.size(path) >= largeFileThresholdBytes) {
                 processLargeFile(path, ingestor, createSnapshot(path), ingestedSegments);
             } else {
                 processRegularFile(path, ingestor, ingestedSegments);
@@ -266,6 +280,10 @@ public class DocumentProcessingService {
         } catch (IOException e) {
             return true;
         }
+    }
+
+    private boolean filterStateFile(Path path) {
+        return !path.getFileName().toString().equals(stateFileName);
     }
 
     private Path resolveDocumentsPath() {

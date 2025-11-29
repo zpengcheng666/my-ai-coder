@@ -48,18 +48,37 @@ public class DocumentProcessingStateTracker {
                 || state.getFileSize() != snapshot.fileSize();
     }
 
+    /**
+     * 标记正在处理
+     * @param snapshot
+     */
     public void markProcessing(DocumentProcessingSnapshot snapshot) {
         updateState(snapshot, DocumentProcessingState.ProcessingStatus.PROCESSING, null, 0);
     }
 
+    /**
+     * 标记成功/**
+     * 标记处理成功
+     * @param snapshot 文件信息
+     * @param processedSegments 处理的分片数
+     */
     public void markSuccess(DocumentProcessingSnapshot snapshot, long processedSegments) {
         updateState(snapshot, DocumentProcessingState.ProcessingStatus.SUCCESS, null, processedSegments);
     }
 
+    /**
+     * 跳过处理
+     * @param snapshot 文件信息
+     */
     public void markSkipped(DocumentProcessingSnapshot snapshot) {
         updateState(snapshot, DocumentProcessingState.ProcessingStatus.SKIPPED, null, 0);
     }
 
+    /**
+     * 处理失败
+     * @param snapshot 文件信息
+     * @param errorMessage 错误信息
+     */
     public void markFailure(DocumentProcessingSnapshot snapshot, String errorMessage) {
         updateState(snapshot, DocumentProcessingState.ProcessingStatus.FAILED, errorMessage, 0);
     }
@@ -68,6 +87,13 @@ public class DocumentProcessingStateTracker {
         return Collections.unmodifiableMap(states);
     }
 
+    /**
+     * 更新状态,持久化
+     * @param snapshot 文件信息
+     * @param status 状态
+     * @param errorMessage 错误信息
+     * @param processedSegments 处理的分片数
+     */
     private void updateState(DocumentProcessingSnapshot snapshot,
                              DocumentProcessingState.ProcessingStatus status,
                              String errorMessage,
@@ -96,7 +122,7 @@ public class DocumentProcessingStateTracker {
             byte[] data = Files.readAllBytes(stateFile);
             List<DocumentProcessingState> list = objectMapper.readValue(
                     data,
-                    new TypeReference<List<DocumentProcessingState>>() {
+                    new TypeReference<>() {
                     });
             list.forEach(state -> states.put(state.getFilePath(), state));
             log.info("成功加载 {} 条文档处理状态", list.size());

@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -81,7 +82,8 @@ public class DocumentProcessingService {
             List<Path> candidates = pathStream
                     .filter(Files::isRegularFile)
                     .filter(this::filterHiddenFile)
-                    .filter(this::filterStateFile)//过滤掉.rag-processing-state.json，使其不加载为知识库
+                    .filter(this::filterStateFile)
+                    .filter(this::filterNonDocumentFiles) // 添加非文档文件过滤
                     .collect(Collectors.toList());
 
             if (candidates.isEmpty()) {
@@ -121,9 +123,21 @@ public class DocumentProcessingService {
         processDocument(path, ingestor, stateTracker, forceReload);
     }
 
+    /**
+     * 并行处理文档,并行处理多个文件
+     * @param paths 文件路径列表
+     * @param ingestor 向量存储对象
+     */
     private void processInParallel(List<Path> paths, EmbeddingStoreIngestor ingestor) {
+        // 使用自定义线程池配置提升大量文件处理性能
         int threads = Math.min(Math.max(1, maxParallelism), paths.size());
-        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        // 创建具有合适配置的线程池
+        ExecutorService executor = Executors.newFixedThreadPool(threads, r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(false);  // 非守护线程
+            t.setPriority(Thread.NORM_PRIORITY);  // 标准优先级
+            return t;
+        });
         try {
             List<CompletableFuture<Void>> futures = paths.stream()
                     .map(path -> CompletableFuture.runAsync(
@@ -133,17 +147,20 @@ public class DocumentProcessingService {
         } finally {
             executor.shutdown();
             try {
-                executor.awaitTermination(1, TimeUnit.MINUTES);
+                // 增加等待时间以确保所有任务完成
+                if (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
+                    log.warn("文档处理线程池关闭超时，强制关闭");
+                    executor.shutdownNow();
+                }
             } catch (InterruptedException e) {
+                log.warn("文档处理线程池关闭被中断");
+                executor.shutdownNow();
                 Thread.currentThread().interrupt();
             }
         }
     }
 
-    private void processDocument(Path path,
-                                 EmbeddingStoreIngestor ingestor,
-                                 DocumentProcessingStateTracker tracker,
-                                 boolean force) {
+    private void processDocument(Path path, EmbeddingStoreIngestor ingestor, DocumentProcessingStateTracker tracker, boolean force) {
         // 当禁用状态跟踪时，总是处理文档
         if (!force && trackState && tracker != null && !tracker.shouldProcess(createSnapshot(path))) {
             tracker.markSkipped(createSnapshot(path));
@@ -284,6 +301,32 @@ public class DocumentProcessingService {
 
     private boolean filterStateFile(Path path) {
         return !path.getFileName().toString().equals(stateFileName);
+    }
+
+    /**
+     * 过滤掉非文档文件（视频、图片、压缩包等）
+     */
+    private boolean filterNonDocumentFiles(Path path) {
+        String fileName = path.getFileName().toString();
+        String extension = getFileExtension(fileName).toLowerCase();
+        
+        // 定义非文档文件扩展名集合
+        Set<String> nonDocumentExtensions = Set.of(
+            // 视频格式
+            "mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "m4v", "3gp", "3g2", "mpg", "mpeg", "m2v", "svi", "vob", "rm", "rmvb",
+            // 图片格式
+            "jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff", "tif", "svg", "ico", "raw", "arw", "cr2", "nrw", "k25", "dib", "heif", "heic", "ind", "indd", "indt", "jp2", "j2k", "jpf", "jpx", "jpm", "mj2", "svgz", "ai", "eps",
+            // 压缩包格式
+            "zip", "rar", "7z", "tar", "gz", "bz2", "xz", "tgz", "tbz2", "txz", "iso", "dmg", "jar", "war", "ear",
+            // 可执行文件
+            "exe", "msi", "bat", "cmd", "sh", "bin", "app", "deb", "rpm",
+            // 数据库文件
+            "db", "sqlite", "mdb", "accdb", "dbf",
+            // 日志文件
+            "log"
+        );
+        
+        return !nonDocumentExtensions.contains(extension);
     }
 
     private Path resolveDocumentsPath() {

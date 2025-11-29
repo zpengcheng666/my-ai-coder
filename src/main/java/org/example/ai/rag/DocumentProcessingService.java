@@ -15,15 +15,14 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,6 +30,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.poifs.crypt.EncryptionInfo;
+import org.apache.pdfbox.pdmodel.PDDocument;
 
 /**
  * 文档处理主流程,涵盖增量检测、流式读取、并行处理、质量过滤等.
@@ -171,8 +175,34 @@ public class DocumentProcessingService {
             tracker.markProcessing(createSnapshot(path));
         }
 
+        // 检查文件是否为空，如果为空则跳过
+        try {
+            if (Files.size(path) == 0) {
+                log.debug("文件为空,跳过处理: {}", path);
+                if (trackState && tracker != null) {
+                    tracker.markSkipped(createSnapshot(path));
+                }
+                return;
+            }
+        } catch (IOException e) {
+            log.warn("无法获取文件大小,跳过处理: {}", path, e);
+            if (trackState && tracker != null) {
+                tracker.markFailure(createSnapshot(path), "无法获取文件大小: " + e.getMessage());
+            }
+            return;
+        }
+
         AtomicLong ingestedSegments = new AtomicLong();
         try {
+            // 检查文件是否受密码保护
+            if (isPasswordProtected(path)) {
+                log.debug("文件受密码保护,跳过处理: {}", path);
+                if (trackState && tracker != null) {
+                    tracker.markSkipped(createSnapshot(path));
+                }
+                return;
+            }
+
             // 对于PDF等二进制文件，不应使用大文件流式处理逻辑
             String fileName = path.getFileName().toString();
             String extension = getFileExtension(fileName).toLowerCase();
@@ -373,6 +403,99 @@ public class DocumentProcessingService {
             return "";
         }
         return fileName.substring(fileName.lastIndexOf('.') + 1);
+    }
+
+    /**
+     * 检查文件是否受密码保护
+     * @param path 文件路径
+     * @return 如果文件受密码保护返回true，否则返回false
+     */
+    private boolean isPasswordProtected(Path path) {
+        String fileName = path.getFileName().toString();
+        String extension = getFileExtension(fileName).toLowerCase();
+        
+        try {
+            switch (extension) {
+                case "pdf":
+                    // 检查PDF文件是否加密
+                    try {
+                        PDDocument document = PDDocument.load(path.toFile());
+                        boolean encrypted = document.isEncrypted();
+                        document.close();
+                        return encrypted;
+                    } catch (IOException e) {
+                        // 如果加载失败，可能是因为密码保护
+                        log.debug("PDF文件可能受密码保护: {}", path, e);
+                        return true;
+                    }
+                    
+                case "doc":
+                case "docx":
+                case "xls":
+                case "xlsx":
+                    // 检查Office文档是否加密
+                    try (FileInputStream fis = new FileInputStream(path.toFile())) {
+                        POIFSFileSystem poifs = new POIFSFileSystem(fis);
+                        // 尝试获取加密信息
+                        boolean encrypted = poifs.getRoot().hasEntry(EncryptionInfo.ENCRYPTION_INFO_ENTRY);
+                        return encrypted;
+                    } catch (Exception e) {
+                        // 如果读取失败，可能是因为密码保护
+                        log.debug("Office文档可能受密码保护: {}", path, e);
+                        return true;
+                    }
+                    
+                case "zip":
+                case "rar":
+                case "7z":
+                    // 对于压缩文件，简单检查是否能列出条目
+                    try {
+                        switch (extension) {
+                            case "zip":
+                                try (ZipFile zipFile = new ZipFile(path.toFile())) {
+                                    // 尝试访问条目但不读取内容
+                                    Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                                    if (entries.hasMoreElements()) {
+                                        ZipEntry entry = entries.nextElement();
+                                        // 尝试获取输入流来检查是否受密码保护
+                                        try (InputStream is = zipFile.getInputStream(entry)) {
+                                            // 如果能获取到流，则不是密码保护的（至少这个条目不是）
+                                            return false;
+                                        } catch (IOException e) {
+                                            // 如果获取流失败，可能是密码保护
+                                            log.debug("ZIP条目可能受密码保护: {}", entry.getName());
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                }
+                                
+                            // 注意：RAR和7Z需要额外的库支持，这里仅作占位符
+                            case "rar":
+                            case "7z":
+                                // 对于RAR和7Z文件，暂时无法简单检查密码保护
+                                // 可以考虑使用第三方库如junrar或sevenzipjbinding
+                                log.debug("无法检查{}文件的密码保护状态", extension);
+                                return false;
+                                
+                            default:
+                                return false;
+                        }
+                    } catch (IOException e) {
+                        // 如果无法打开压缩文件，可能是因为密码保护
+                        log.debug("压缩文件可能受密码保护: {}", path, e);
+                        return true;
+                    }
+                    
+                default:
+                    // 对于其他类型的文件，默认不检查密码保护
+                    return false;
+            }
+        } catch (Exception e) {
+            log.warn("检查文件密码保护时发生错误: {}", path, e);
+            // 发生异常时，保守地认为文件可能受密码保护
+            return true;
+        }
     }
 
 }

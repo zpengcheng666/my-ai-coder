@@ -21,21 +21,35 @@
     </div>
 
     <div class="conversation-items">
-      <el-card 
-        v-for="conversation in filteredConversations"
-        :key="conversation.conversationId"
-        :class="['conversation-item', { active: currentConversationId === conversation.conversationId }]"
-        @click="selectConversation(conversation)"
-        shadow="hover"
+      <RecycleScroller
+        class="scroller"
+        :items="filteredConversations"
+        :item-size="70"
+        key-field="conversationId"
+        v-slot="{ item: conversation }"
       >
-        <div class="conversation-info">
-          <h4 class="conversation-title">{{ conversation.title || '未命名会话' }}</h4>
-          <p class="conversation-time">{{ conversation.createTime ? formatTime(new Date(conversation.createTime)) : '' }}</p>
+        <div 
+          :class="['conversation-item', { active: currentConversationId === conversation.conversationId }]"
+          @click="selectConversation(conversation)"
+        >
+          <div class="conversation-content">
+            <div class="conversation-info">
+              <h4 class="conversation-title">{{ conversation.title || '未命名会话' }}</h4>
+              <p class="conversation-time">{{ conversation.createTime ? formatTime(new Date(conversation.createTime)) : '' }}</p>
+            </div>
+            <div class="conversation-actions">
+              <el-button 
+                @click.stop="deleteConversation(conversation)" 
+                type="danger" 
+                :icon="Delete" 
+                circle 
+                size="small"
+                title="删除会话"
+              />
+            </div>
+          </div>
         </div>
-        <div class="conversation-actions">
-          <el-button @click.stop="deleteConversation(conversation)" type="danger" :icon="Delete" circle size="small" />
-        </div>
-      </el-card>
+      </RecycleScroller>
     </div>
 
     <div v-if="loading" class="loading">
@@ -71,6 +85,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { Plus, Search, Delete } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
+import { RecycleScroller } from 'vue-virtual-scroller'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { 
   getConversations, 
   createConversation, 
@@ -240,22 +256,31 @@ watch(() => props.userId, () => {
 
 .conversation-items {
   flex: 1;
-  overflow-y: auto;
   padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding-right: 5px; /* 为滚动条预留空间 */
+}
+
+.scroller {
+  height: 100%;
 }
 
 .conversation-item {
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid #ebeef5;
   border-radius: 8px;
+  background-color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin-bottom: 8px;
+  margin-right: 5px; /* 为滚动条预留空间 */
 }
 
 .conversation-item:hover {
   border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .conversation-item.active {
@@ -263,9 +288,17 @@ watch(() => props.userId, () => {
   background-color: #ecf5ff;
 }
 
+.conversation-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+}
+
 .conversation-info {
   flex: 1;
-  padding: 10px;
+  min-width: 0; /* 允许内容收缩 */
+  padding-right: 10px;
 }
 
 .conversation-title {
@@ -281,13 +314,29 @@ watch(() => props.userId, () => {
 .conversation-time {
   margin: 0;
   font-size: 12px;
-  color: #666;
+  color: #999;
 }
 
 .conversation-actions {
-  display: flex;
-  align-items: center;
-  padding: 0 10px 10px;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(10px) scale(0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: white;
+  border-radius: 50%;
+}
+
+.conversation-item:hover .conversation-actions {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.conversation-actions :deep(.el-button) {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.conversation-actions :deep(.el-button:hover) {
+  transform: scale(1.1);
 }
 
 .loading {
@@ -305,21 +354,26 @@ watch(() => props.userId, () => {
 }
 
 /* 滚动条样式 */
-.conversation-items::-webkit-scrollbar {
-  width: 6px;
+:deep(.scroller::-webkit-scrollbar) {
+  width: 8px;
 }
 
-.conversation-items::-webkit-scrollbar-track {
-  background: #f1f1f1;
+:deep(.scroller::-webkit-scrollbar-track) {
+  background: transparent;
+  margin: 5px 0;
 }
 
-.conversation-items::-webkit-scrollbar-thumb {
+:deep(.scroller::-webkit-scrollbar-thumb) {
   background: #c1c1c1;
-  border-radius: 3px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
-.conversation-items::-webkit-scrollbar-thumb:hover {
+:deep(.scroller::-webkit-scrollbar-thumb:hover) {
   background: #a8a8a8;
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 
 @media (max-width: 768px) {
@@ -329,6 +383,18 @@ watch(() => props.userId, () => {
     max-height: 40vh;
     border-right: none;
     border-bottom: 1px solid #e1e5e9;
+  }
+  
+  .conversation-content {
+    padding: 10px 12px;
+  }
+  
+  .conversation-items {
+    padding-right: 3px;
+  }
+  
+  .conversation-item {
+    margin-right: 3px;
   }
 }
 </style>

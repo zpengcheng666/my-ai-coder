@@ -9,6 +9,9 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+/**
+ * 是传统编程方式，手动调用模型 API, 功能相对基础，只提供基本聊天功能
+ */
 @Service
 @Slf4j
 public class AiCodeHelper {

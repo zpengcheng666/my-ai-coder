@@ -1,11 +1,9 @@
 package org.example.ai.rag;
 
-import dev.langchain4j.data.document.Document;
+import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
-import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;
-import dev.langchain4j.data.document.parser.apache.poi.ApachePoiDocumentParser;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.data.segment.TextSegmentTransformer;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -14,7 +12,6 @@ import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
-import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,8 +20,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Async;
-
-import java.io.InputStream;
 
 /**
  * 增强的RAG配置
@@ -70,7 +65,7 @@ public class EnhancedRagConfig {
 
     /**
      * 向量存储配置,默认使用内存向量存储,可以替换为Redis
-     * 如果使用Redis向量存储实现，需要Redis Stack或RediSearch模块，需要用docker来启动RediSearch模块
+     * 如果使用Redis向量存储实现，需要Redis Stack或 RediSearch模块，需要用docker来启动 RediSearch模块
      */
     @Bean
     @Primary
@@ -104,18 +99,12 @@ public class EnhancedRagConfig {
     }
 
     /**
-     * 文档分割器
+     * 文档分割器,默认使用SmartDocumentSplitter
      */
     @Bean
     public DocumentSplitter documentSplitter() {
-        return new SmartDocumentSplitter(
-                maxSegmentSize,
-                smallDocumentSegmentSize,
-                largeDocumentSegmentSize,
-                smallDocumentThreshold,
-                largeDocumentThreshold,
-                maxOverlap
-        );
+        return new SmartDocumentSplitter(maxSegmentSize, smallDocumentSegmentSize, largeDocumentSegmentSize,
+                smallDocumentThreshold, largeDocumentThreshold, maxOverlap);
     }
 
     /**
@@ -134,6 +123,8 @@ public class EnhancedRagConfig {
 
     /**
      * 文档摄取器
+     * 创建并配置一个EmbeddingStoreIngestor实例，负责将文档分段、转换、向量化后存入向量存储。
+     * 通过传入的DocumentSplitter、TextSegmentTransformer、EmbeddingModel和EmbeddingStore组件完成整个文档处理流程。
      */
     @Bean
     public EmbeddingStoreIngestor embeddingStoreIngestor(
@@ -150,7 +141,12 @@ public class EnhancedRagConfig {
     }
 
     /**
-     * 内容检索器
+     * 内容检索器,创建一个增强的内容检索器（ContentRetriever），
+     * 通过传入的向量存储（EmbeddingStore）和配置参数（如最大返回结果数、最小匹配分数等），结合嵌入模型（EmbeddingModel），
+     * 构建一个基于向量搜索的内容检索组件。
+     *
+     * @param embeddingStore 向量存储
+     * @return 内容检索器
      */
     @Bean
     @Lazy

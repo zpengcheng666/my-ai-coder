@@ -33,7 +33,7 @@ public class PersistentChatMemory implements ChatMemory {
         
         // 保持消息数量限制
         if (messages.size() > maxMessages) {
-            messages.remove(0);
+            messages.removeFirst();
         }
     }
     

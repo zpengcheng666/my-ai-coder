@@ -46,4 +46,9 @@ public interface ConversationHistoryMapper extends BaseMapper<ConversationHistor
      * 删除指定时间之前的历史记录
      */
     void deleteByCreateTimeBefore(LocalDateTime time);
+    
+    /**
+     * 根据会话ID删除历史记录
+     */
+    void deleteByConversationId(@Param("conversationId") String conversationId);
 }

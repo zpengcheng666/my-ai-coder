@@ -58,7 +58,7 @@ public class AiCodeHelperServiceFactory {
                 .streamingChatModel(streamingChatModel) // 流式模型输出
                 .chatMemoryProvider(memoryProvider) // 持久化会话记忆
                 .contentRetriever(enhancedContentRetriever) // 增强RAG内容检索
-                .tools(new InterviewQuestionTool()) // 自定义工具调用
+//                .tools(new InterviewQuestionTool()) // 自定义工具调用
                 .tools(mcpToolProvider) // MCP工具调用
                 .build();
 

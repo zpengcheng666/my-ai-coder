@@ -82,7 +82,13 @@ public class ConversationStorageService {
     }
 
     /**
-     * 保存AI响应消息
+     * 保存AI消息, 并保存到Redis和MySQL
+     * @param conversationId 会话ID
+     * @param userId 用户ID
+     * @param content  内容
+     * @param tokenUsed 使用的token数
+     * @param isStreaming 是否流式返回
+     * @return AI回复内容
      */
     public String saveAiMessage(String conversationId, String userId, String content,
                                 Integer tokenUsed, boolean isStreaming) {
@@ -160,7 +166,7 @@ public class ConversationStorageService {
     }
 
     /**
-     * 软删除会话
+     * 删除会话
      */
     @Transactional
     public boolean deleteConversation(String conversationId, String userId) {
@@ -170,11 +176,15 @@ public class ConversationStorageService {
                 // 同步清理Redis中的会话列表（非强制）
                 String conversationKey = REDIS_CONVERSATION_PREFIX + conversationId;
                 redisTemplate.delete(conversationKey);
+                
+                // 同时删除MySQL中的相关历史记录
+                historyMapper.deleteByConversationId(conversationId);
+                
                 return true;
             }
             return false;
         } catch (Exception e) {
-            log.error("软删除会话失败: {}", e.getMessage(), e);
+            log.error("删除会话失败: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -286,7 +296,6 @@ public class ConversationStorageService {
      * @param userId 用户ID
      * @param conversationId 会话ID
      */
-    @Transactional
     public void updateSessionActivity(String conversationId, String userId, Integer tokenUsed) {
         try {
             sessionMapper.updateSessionActivity(conversationId, LocalDateTime.now(), tokenUsed != null ? tokenUsed : 0);

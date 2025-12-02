@@ -39,6 +39,12 @@ public class EnhancedRagConfig {
     @Value("${rag.vector.store.type:redis}")
     private String vectorStoreType;
 
+    @Value("${spring.data.redis-stack.host}")
+    private String redisHost;
+
+    @Value("${spring.data.redis-stack.port}")
+    private int redisPort;
+
     @Value("${rag.segment.max-size:800}")
     private int maxSegmentSize;
 
@@ -74,8 +80,8 @@ public class EnhancedRagConfig {
             try {
                 log.info("尝试使用Redis向量存储");
                 RedisEmbeddingStore redisEmbeddingStore = RedisEmbeddingStore.builder()
-                        .host("192.168.10.100")
-                        .port(6379)
+                        .host(redisHost)
+                        .port(redisPort)
                         .dimension(1536)
                         .build();
                 return redisEmbeddingStore;

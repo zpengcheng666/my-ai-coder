@@ -100,7 +100,7 @@ public class DocumentProcessingService {
             }
 
             // 当禁用状态跟踪或强制重载时，处理所有文件
-            List<Path> toProcess = (forceReload || !trackState) ? candidates : filterChangedFiles(candidates);
+            List<Path> toProcess = (forceReload || trackState) ? candidates : filterChangedFiles(candidates);
             if (toProcess.isEmpty()) {
                 log.info("没有需要更新的文档,跳过摄取");
                 return;

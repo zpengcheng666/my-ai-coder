@@ -51,6 +51,11 @@ spring:
           # 连接池最小空闲连接数
           min-idle: 0
 
+    # Redis Stack数据库连接配置
+    redis-stack:
+      host: 192.168.10.100
+      port: 6379
+
   # MySQL配置
   datasource:
     url: jdbc:mysql://localhost:3306/ai_chat_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
@@ -112,7 +117,9 @@ langchain4j:
 # bigmodel配置项，用于配置大模型 MCP 的相关的API密钥信息
 # 配置项说明: api-key: 大模型服务的认证密钥，用于API调用的身份验证，格式为: {用户标识}.{访问令牌}
 bigmodel:
-  api-key: 
+  api-key:
+  sse-url: https://open.bigmodel.cn/api/mcp/web_search/sse?Authorization=
+  mcp-key: yupiMcpClient
 
 # RAG配置
 # 配置文档检索增强生成(RAG)相关参数，包括文档路径、向量存储、文本分段和检索策略等核心组件
@@ -140,11 +147,11 @@ rag:
   # 文档处理配置
   processing:
     # 是否跟踪文档处理状态，默认为false表示不跟踪
-    track-state: true
+    track-state: false
     # 状态文件名
     state-file-name: .rag-processing-state.json
     # 是否包含隐藏文件
-    include-hidden: true
+    include-hidden: false
 
   # 大文件处理配置
   large-file:
